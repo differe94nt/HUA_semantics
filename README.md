@@ -2,7 +2,14 @@
 
 大三華語文教學系 50 分鐘課堂活動的網頁與文件：以國家教育研究院華語中介語語料庫（2019）的詞彙誤代偏誤句為材料，學生分成「人類分析小隊」（查中文詞彙網路 CWN）與「AI 分析小隊」（引導 AI 做互動教材），最後比較兩者，體會專業知識才能有效引導並判斷 AI。
 
-## 線上版本（claude.ai Artifact，需從分享選單開啟連結）
+## 上課用的網址（GitHub Pages，答案存到 Google 試算表）
+
+| 網頁 | 給誰 | 連結 |
+|---|---|---|
+| 偏誤句小組任務單 | 學生（教師端也在這裡，點「教師入口」輸入通關碼） | https://differe94nt.github.io/HUA_semantics/dist/student_tasks.html |
+| 詞網與AI偏誤工作坊 | 教師投影 | https://differe94nt.github.io/HUA_semantics/dist/teaching_slides.html |
+
+## 舊的線上版本（claude.ai Artifact，需從分享選單開啟連結）
 
 | 網頁 | 用途 | 連結 |
 |---|---|---|
