@@ -1,0 +1,9 @@
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
+*.check*.js
+
+# 學生答案不進 repo
+data/exports/*
+!data/exports/.gitkeep

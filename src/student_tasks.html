@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>[hidden]{display:none!important}img{max-width:100%}</style>
+</head>
+<body>
+<title>偏誤句小組任務單</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700;900&display=swap">
+<style>
+/* Layout: same family as the teaching deck — sticky group bar + page rail on top, one task page at a time (max 860px), prev/next at bottom. Teacher view widens to 1100px. */
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --surface2:#e8edf1; --fg:#17212b; --muted:#566271; --line:#d0d8e0;
+  --accent:#1d5f7a; --accent-fg:#ffffff; --accent-soft:#d9eaf2;
+  --mark:#c0392b; --mark-soft:#fbe3df;
+  --human:#1f7a5c; --human-soft:#dcf0e6; --ai:#6b3fb8; --ai-soft:#e9e0f8;
+  --ok:#2e7d32; --warn:#9a5b00; --warn-soft:#fbefd9;
+  --font-body:"Noto Sans TC",-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+  --font-display:"Noto Serif TC","Songti TC","PMingLiU",Georgia,serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#121820; --surface:#1b222b; --surface2:#252e39; --fg:#e9eef3; --muted:#9ba7b4; --line:#34404c;
+  --accent:#6fb6d4; --accent-fg:#0f1a21; --accent-soft:#1d3540;
+  --mark:#ff8a75; --mark-soft:#4a2520;
+  --human:#6fd0a8; --human-soft:#1d3a2e; --ai:#c4a7f5; --ai-soft:#332647;
+  --ok:#7ad48a; --warn:#f0b24a; --warn-soft:#3d2e14; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#121820; --surface:#1b222b; --surface2:#252e39; --fg:#e9eef3; --muted:#9ba7b4; --line:#34404c;
+  --accent:#6fb6d4; --accent-fg:#0f1a21; --accent-soft:#1d3540;
+  --mark:#ff8a75; --mark-soft:#4a2520;
+  --human:#6fd0a8; --human-soft:#1d3a2e; --ai:#c4a7f5; --ai-soft:#332647;
+  --ok:#7ad48a; --warn:#f0b24a; --warn-soft:#3d2e14; color-scheme:dark }
+
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:17px;line-height:1.7;margin:0}
+h1,h2,h3{font-family:var(--font-display);line-height:1.3;text-wrap:balance;margin:0}
+h1{font-size:clamp(1.8rem,5vw,2.6rem);font-weight:900}
+h2{font-size:clamp(1.4rem,3.6vw,2rem);font-weight:700}
+h3{font-size:1.1rem;font-weight:700}
+p{margin:0;max-width:65ch}
+a{color:var(--accent)}
+.muted{color:var(--muted)} .small{font-size:.85rem}
+.kicker{font-size:.8rem;letter-spacing:.1em;color:var(--accent);font-weight:700}
+.kicker.human{color:var(--human)} .kicker.ai{color:var(--ai)}
+.lead{font-size:1.08rem;color:var(--muted)}
+.wrap{width:100%;max-width:860px;margin:0 auto;padding-inline:16px;padding-block:24px 32px}
+.wrap.wide{max-width:1100px}
+.page{display:flex;flex-direction:column;gap:18px}
+.stack{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.grid>*{min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px}
+.card.soft{background:var(--surface2);border-color:transparent}
+.card.human{border-top:5px solid var(--human)} .card.ai{border-top:5px solid var(--ai)}
+.chip{display:inline-block;border-radius:999px;padding:1px 10px;font-size:.8rem;font-weight:600;background:var(--surface2);color:var(--fg)}
+.chip.human{background:var(--human-soft);color:var(--human)} .chip.ai{background:var(--ai-soft);color:var(--ai)} .chip.acc{background:var(--accent-soft);color:var(--accent)}
+
+/* top bars */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.top-in{max-width:1100px;margin:0 auto;padding:8px 16px;display:flex;flex-direction:column;gap:6px}
+.top .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.top .gname{font-family:var(--font-display);font-weight:700;font-size:1.1rem}
+.rail{display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin}
+.rail button{flex:0 0 auto;border:0;background:transparent;color:var(--muted);border-radius:999px;padding:6px 12px;font:inherit;font-size:.82rem;font-weight:600;white-space:nowrap;cursor:pointer}
+.rail button.on{background:var(--accent);color:var(--accent-fg)}
+.rail button.human.on{background:var(--human);color:var(--bg)}
+.rail button.ai.on{background:var(--ai);color:var(--bg)}
+.rail button.done::after{content:" ✓"}
+.rail button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.foot{position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px))}
+.foot-in{max-width:860px;margin:0 auto;display:flex;gap:10px;align-items:center;justify-content:space-between}
+.foot .pos{font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* controls */
+button{font:inherit;cursor:pointer}
+.btn{border:1px solid var(--accent);background:var(--accent);color:var(--accent-fg);border-radius:8px;padding:9px 16px;font-weight:600;font-size:.95rem}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.sm{padding:5px 11px;font-size:.82rem}
+.btn.human{background:var(--human);border-color:var(--human);color:var(--bg)}
+.btn.ai{background:var(--ai);border-color:var(--ai);color:var(--bg)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.pill{display:inline-flex;align-items:center;border-radius:999px;padding:2px 10px;font-size:.78rem;font-weight:600;border:1px solid var(--line);background:var(--surface2)}
+.pill.ok{color:var(--ok)} .pill.warn{color:var(--warn)}
+label.f{display:flex;flex-direction:column;gap:6px;font-weight:600}
+label.f .hint{font-weight:400;color:var(--muted);font-size:.85rem}
+input[type=text],input[type=password],select,textarea{font:inherit;font-weight:400;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;width:100%;min-width:0}
+textarea{resize:vertical;line-height:1.6}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.dirty{border-color:var(--warn)!important}
+::placeholder{color:var(--muted);opacity:.75}
+.status{font-size:.8rem;color:var(--muted)}
+.status.ok{color:var(--ok)} .status.warn{color:var(--warn)}
+.savebar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding-top:12px}
+
+/* steps */
+.todo{counter-reset:t;list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px}
+.todo li{counter-increment:t;display:grid;grid-template-columns:34px 1fr;gap:12px}
+.todo li>div{min-width:0}
+.todo li::before{content:counter(t);width:30px;height:30px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:700;display:flex;align-items:center;justify-content:center}
+.todo.human li::before{background:var(--human-soft);color:var(--human)}
+.todo.ai li::before{background:var(--ai-soft);color:var(--ai)}
+
+/* sentence */
+.sent{font-family:var(--font-display);font-size:1.12rem;line-height:2}
+.tok{display:inline-block;padding:0 2px;border-radius:4px;border:1px solid transparent;cursor:pointer;background:none;font:inherit;color:inherit;line-height:1.6;margin:2px 0}
+.tok.punct{cursor:default;padding:0}
+.tok:not(.punct):not(.heat){border-bottom:1px dashed var(--line)}
+.tok:not(.punct):not(.heat):hover{border-color:var(--accent)}
+.tok.marked{background:var(--mark-soft);color:var(--mark);border-color:var(--mark)!important;font-weight:700}
+.tok:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tok.heat{cursor:default}
+
+/* flow + team picker */
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.flow>div{border-radius:10px;padding:12px;background:var(--surface);border:1px solid var(--line)}
+.flow b{display:block;font-family:var(--font-display);font-size:1.05rem}
+.flow .t{font-variant-numeric:tabular-nums;font-size:.8rem;color:var(--muted)}
+.teams{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.team{border-radius:12px;padding:18px;border:2px solid var(--line);background:var(--surface);text-align:left;color:var(--fg);display:flex;flex-direction:column;gap:6px}
+.team.human{border-color:var(--human)} .team.ai{border-color:var(--ai)}
+.team strong{font-family:var(--font-display);font-size:1.3rem}
+.team.human strong{color:var(--human)} .team.ai strong{color:var(--ai)}
+.team:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cmp>div{min-width:0;display:flex;flex-direction:column;gap:8px;border-radius:10px;padding:12px}
+.cmp .wrong{background:var(--mark-soft)} .cmp .right{background:var(--human-soft)}
+.cmp .lbl{font-size:.8rem;font-weight:700}
+.cmp .wrong .lbl{color:var(--mark)} .cmp .right .lbl{color:var(--human)}
+@media (max-width:560px){ .cmp{grid-template-columns:1fr} }
+.tpl{position:relative;background:var(--surface2);border-radius:8px;padding:44px 12px 12px;font-size:.88rem;white-space:pre-wrap;word-break:break-word;line-height:1.6;border:1px dashed var(--line);margin-top:8px;max-height:240px;overflow:auto}
+.tpl .copy{position:absolute;top:8px;right:8px}
+.tpl .tname{position:absolute;top:12px;left:12px;font-size:.78rem;font-weight:700;color:var(--ai)}
+details.help summary{cursor:pointer;font-weight:600;color:var(--accent)}
+.banner{border-left:4px solid var(--accent);background:var(--accent-soft);padding:8px 14px;border-radius:8px;font-size:.92rem;display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between}
+.timer{font-variant-numeric:tabular-nums;font-weight:700}
+.score{display:flex;gap:8px;flex-wrap:wrap}
+.score label{display:flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:700;cursor:pointer;font-family:var(--font-display);font-size:1.2rem}
+.score input{position:absolute;opacity:0;pointer-events:none}
+.score input:checked+span{color:var(--accent-fg)}
+.score label:has(input:checked){background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.score label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+
+/* login */
+.gpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.gpick button{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:10px;padding:12px 8px;text-align:center}
+.gpick button strong{display:block;font-family:var(--font-display);font-size:1.4rem}
+.gpick button span{font-size:.75rem;color:var(--muted)}
+.gpick button:hover{border-color:var(--accent)}
+.gpick button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* teacher */
+.tbl{width:100%;border-collapse:collapse;font-size:.92rem}
+.tbl th,.tbl td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;vertical-align:top}
+.tbl th{font-weight:600;color:var(--muted);font-size:.8rem}
+.scroll{overflow-x:auto}
+.ggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.gcell{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface);text-align:left;color:var(--fg)}
+.gcell .n{font-family:var(--font-display);font-size:1.2rem;font-weight:700}
+.dots{display:flex;gap:4px;margin-top:6px}
+.dots span{width:22px;height:6px;border-radius:3px;background:var(--line)}
+.dots span.on{background:var(--ok)}
+.ans{background:var(--surface2);border-radius:8px;padding:10px 12px;white-space:pre-wrap;word-break:break-word;font-size:.95rem}
+.ans.empty{color:var(--muted);font-style:italic}
+.proj .sent{font-size:1.5rem} .proj .ans{font-size:1.1rem}
+.refbox{border:1px dashed var(--warn);background:var(--warn-soft);border-radius:10px;padding:10px 14px;font-size:.9rem}
+.toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:.9rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:no-preference){ .page{animation:in .22s ease-out} @keyframes in{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}} }
+@media (prefers-reduced-motion:reduce){ .toast{transition:none} }
+</style>
+
+<div id="app"></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="../content/config.js"></script>
+<script>
+(function(){
+'use strict';
+// ====== 設定：全部來自 content/config.js ======
+const C=window.CWN_CONFIG||{};
+const TEACHER_CODE=C.teacherCode||'cwn2026';
+const CWN_URL=C.cwnUrl||'https://lopentu.github.io/CwnWeb/';
+const TOTAL_GROUPS=C.totalGroups||14;
+const LS={ group:'cwntask:group', data:'cwntask:g', teacher:'cwntask:teacher', page:'cwntask:page' };
+
+// 偏誤句：toks 以「|」斷詞，只是為了方便點選
+const SENTENCES=(C.sentences||[]).map(s=>{ const tokens=s.toks.split('|'); return Object.assign({},s,{tokens,text:tokens.join('')}) });
+const PUNCT=/^[，。！？、；：「」（）]$/;
+const sentenceForGroup=g=>SENTENCES.find(s=>s.groups.includes(g))||SENTENCES[0];
+
+// 老師廣播用的階段
+const STAGES=C.stages||[ {n:1,title:'找出誤代詞',min:5}, {n:2,title:'分隊分析',min:12}, {n:3,title:'比較與結論',min:15} ];
+// 學生端頁面
+const PAGES=[
+ {id:'start', nav:'開始'},
+ {id:'s1',    nav:'1 找誤代詞', sec:'s1'},
+ {id:'human', nav:'2 人類分析小隊', sec:'human', cls:'human'},
+ {id:'ai',    nav:'2 AI 分析小隊', sec:'ai', cls:'ai'},
+ {id:'s3',    nav:'3 比較與結論', sec:'s3'},
+];
+// AI 分析小隊的模板
+const tplGemini=sent=>String((C.templates&&C.templates.gemini)||'').split('{{sentence}}').join(sent);
+const TPL_BUILDER=String((C.templates&&C.templates.builder)||'');
+
+// 匯出用的欄位（教師端 CSV；tools/export.py 也用同一組欄位）
+const EXPORT_COLUMNS=[['組'],['偏誤句'],['1點選','s1.markedWords'],['1改成','s1.fix'],['1為什麼','s1.why'],['人類_用錯的詞','human.wrongWord'],['人類_用錯詞義項','human.wrongSense'],['人類_正確的詞','human.rightWord'],['人類_正確詞義項','human.rightSense'],['人類_差別','human.diff'],['人類_解釋','human.explain'],['人類_教學計畫','human.plan'],['AI_改法','ai.aiFix'],['AI_理由','ai.aiExplain'],['AI_網頁','ai.result'],['AI_過程','ai.notes'],['AI_prompt','ai.prompt'],['3比一比','s3.compare'],['3AI分數','s3.score'],['3最終答案','s3.final'],['3一句話','s3.share'],['更新時間','updatedAt']];
+
+// ====== 小工具 ======
+const $=(s,el)=>(el||document).querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function lsGet(k){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):null }catch(e){ return null } }
+function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)) }catch(e){} }
+function lsDel(k){ try{ localStorage.removeItem(k) }catch(e){} }
+const now=()=>new Date().toISOString();
+const fmtTime=iso=>iso?new Date(iso).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}):'';
+const mmss=sec=>{ sec=Math.max(0,Math.round(sec)); return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0') };
+let toastT; function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),1800) }
+function copyText(text){
+  const fallback=()=>{ const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); toast('已複製') }catch(e){ toast('請手動選取複製') } ta.remove(); };
+  if(!navigator.clipboard||!navigator.clipboard.writeText){ fallback(); return Promise.resolve() }
+  return navigator.clipboard.writeText(text).then(()=>toast('已複製'),fallback);
+}
+const getPath=(o,p)=>p.split('.').reduce((a,k)=>a&&a[k],o);
+const clone=o=>JSON.parse(JSON.stringify(o));
+
+// ====== 儲存後端 ======
+// 三種後端共用同一組介面，其他程式只透過 S.store 存取：
+//   mode                      'db' | 'sheet' | 'local'
+//   saveGroup(id, data)       儲存一組的答案（id 形如 'g3'）
+//   saveSettings(data)        儲存教師廣播（目前階段）
+//   watchGroup(id, cb)        某一組的答案有更新時呼叫 cb(data)；回傳取消函式
+//   watchGroups(cb)           全班答案有更新時呼叫 cb({g1:{...},...})
+//   watchSettings(cb)         教師廣播有更新時呼叫 cb(settings)
+const noop=()=>{};
+function makeLocalStore(){
+  return { mode:'local',
+    async saveGroup(id,data){ lsSet(LS.data+id.slice(1),data) },
+    async saveSettings(){ throw new Error('local') },
+    watchGroup(){ return noop }, watchGroups(){ return noop }, watchSettings(){ return noop },
+  };
+}
+function makeDbStore(db){
+  return { mode:'db',
+    saveGroup:(id,data)=>db.doc('groups/'+id).set(data),
+    saveSettings:data=>db.doc('settings/class').set(data),
+    watchGroup:(id,cb)=>db.doc('groups/'+id).onSnapshot(snap=>{ if(!snap.exists||snap.metadata.hasPendingWrites) return; cb(clone(snap.data())) },noop),
+    watchGroups:cb=>db.collection('groups').onSnapshot(snap=>{ const o={}; snap.docs.forEach(d=>o[d.id]=d.data()); cb(o) },noop),
+    watchSettings:cb=>db.doc('settings/class').onSnapshot(snap=>cb(snap.exists?snap.data():{}),noop),
+  };
+}
+// Google 試算表（Apps Script 網頁應用程式；程式碼在 backend/google_sheets.gs）。
+// 儲存＝POST JSON；更新＝定時 GET 全部資料。POST 用 text/plain 可避開 CORS 預檢。
+function makeSheetStore(url){
+  const POLL=Math.max(3,+C.sheetPollSeconds||8)*1000;
+  let cache={groups:{},settings:{}}, timer=null, pulling=false;
+  const L={group:new Map(),groups:new Set(),settings:new Set()};
+  const withQ=q=>url+(url.includes('?')?'&':'?')+q;
+  async function post(body){
+    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'save failed'); return j;
+  }
+  async function pull(){
+    if(pulling) return; pulling=true;
+    try{ const r=await fetch(withQ('action=all&_='+Date.now()),{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status);
+      const j=await r.json(); if(!j.ok) throw new Error(j.error||'load failed');
+      cache={groups:j.groups||{},settings:j.settings||{}}; notify(); }
+    finally{ pulling=false }
+  }
+  function notify(){
+    L.groups.forEach(cb=>cb(cache.groups));
+    L.settings.forEach(cb=>cb(cache.settings.class||{}));
+    L.group.forEach((set,id)=>{ if(cache.groups[id]) set.forEach(cb=>cb(clone(cache.groups[id]))) });
+  }
+  function ensurePolling(){ if(timer) return; pull().catch(noop); timer=setInterval(()=>{ if(document.visibilityState==='visible') pull().catch(noop) },POLL) }
+  // 訂閱時先給目前快取的內容，並立刻重新抓一次，之後靠定時輪詢
+  const sub=(set,cb,initial)=>{ set.add(cb); if(initial!==undefined) cb(initial); ensurePolling(); pull().catch(noop); return ()=>set.delete(cb) };
+  return { mode:'sheet',
+    async saveGroup(id,data){ await post({type:'group',id,data}); cache.groups[id]=clone(data); notify() },
+    async saveSettings(data){ await post({type:'settings',id:'class',data}); cache.settings.class=clone(data); notify() },
+    watchGroup(id,cb){ if(!L.group.has(id)) L.group.set(id,new Set()); return sub(L.group.get(id),cb,cache.groups[id]&&clone(cache.groups[id])) },
+    watchGroups:cb=>sub(L.groups,cb,cache.groups),
+    watchSettings:cb=>sub(L.settings,cb,cache.settings.class||{}),
+    ping:()=>pull(),
+  };
+}
+
+// ====== 狀態 ======
+const S={
+  view:'login', group:lsGet(LS.group), page:0,
+  store:null, user:null, mode:'pending', data:{}, cls:{}, dirty:new Set(), groupUnsub:null,
+  t:{ unlocked:!!lsGet(LS.teacher), tab:'overview', sel:1, projSent:1, groups:{}, unsub:null },
+};
+{ const p=lsGet(LS.page); if(typeof p==='number'&&p<PAGES.length) S.page=p }
+const remote=()=>S.mode==='db'||S.mode==='sheet';
+
+// ====== 儲存 ======
+function loadLocal(){ S.data=S.group?(lsGet(LS.data+S.group)||{}):{} }
+async function saveSection(sec,val){
+  if(!S.group) return;
+  val.at=now();
+  S.data=Object.assign({},S.data,{[sec]:val,group:S.group,sentence:sentenceForGroup(S.group).id,updatedAt:now()});
+  lsSet(LS.data+S.group,S.data);
+  [...S.dirty].filter(k=>k.startsWith(sec+'.')).forEach(k=>S.dirty.delete(k));
+  document.querySelectorAll('[data-k^="'+sec+'."]').forEach(el=>el.classList.remove('dirty'));
+  showSaved(sec,remote()?false:undefined);
+  if(remote()&&S.store){
+    try{ await S.store.saveGroup('g'+S.group,S.data); showSaved(sec,true); toast('已儲存') }
+    catch(e){
+      if(e&&e.code==='invalid_argument'){ S.mode='local'; renderModePill() }
+      showSaved(sec); toast('沒有存到老師那裡，先存在這台裝置');
+    }
+  } else toast('已存在這台裝置');
+  renderRail();
+}
+function showSaved(sec,server){
+  const el=document.querySelector('[data-status="'+sec+'"]'); if(!el) return;
+  const at=S.data[sec]&&S.data[sec].at;
+  if(!at){ el.textContent='還沒儲存'; el.className='status'; return }
+  if(remote()&&server!==undefined){ el.textContent=server===false?'儲存中…':'已儲存 · '+fmtTime(at); el.className='status ok' }
+  else if(remote()){ el.textContent='已儲存 · '+fmtTime(at); el.className='status ok' }
+  else { el.textContent='已存在這台裝置 · '+fmtTime(at); el.className='status warn' }
+}
+
+// ====== 連線：決定用哪個後端 ======
+async function initStore(){
+  let store=null;
+  try{
+    const [db,user]=await Promise.all([window.claude?.use?.('db'),window.claude?.use?.('user')]);
+    if(db){
+      let w=null; try{ w=await user?.can('data.write') }catch(e){}
+      if(w!==false){ store=makeDbStore(db); S.user=user||null }
+      try{ if(await user?.isOwner()){ S.t.unlocked=true; lsSet(LS.teacher,true) } }catch(e){}
+    }
+  }catch(e){}
+  if(!store&&C.sheetEndpoint){
+    const sheet=makeSheetStore(C.sheetEndpoint);
+    try{ await sheet.ping(); store=sheet }catch(e){ console.warn('Google 試算表連不上，改存本機：',e) }
+  }
+  if(!store) store=makeLocalStore();
+  S.store=store; S.mode=store.mode; renderModePill();
+  if(remote()){
+    store.watchSettings(cls=>{ S.cls=cls||{}; renderBanner(); renderTeacherStageBar() });
+    if(S.group) subscribeGroup();
+    if(S.view==='teacher') subscribeTeacher();
+  }
+  if(S.t.unlocked&&S.view==='login') render();
+}
+function subscribeGroup(){
+  if(!S.store||!remote()||!S.group) return;
+  if(S.groupUnsub) S.groupUnsub();
+  S.groupUnsub=S.store.watchGroup('g'+S.group,data=>{
+    // 只接受比手上更新的資料，避免輪詢時把剛存的答案蓋掉
+    if(S.data.updatedAt&&data.updatedAt&&data.updatedAt<S.data.updatedAt) return;
+    S.data=data; lsSet(LS.data+S.group,S.data);
+    syncFields(); renderRail();
+  });
+}
+function subscribeTeacher(){
+  if(!S.store||!remote()||S.t.unsub) return;
+  S.t.unsub=S.store.watchGroups(groups=>{ S.t.groups=groups||{}; if(S.view==='teacher') renderTeacherBody() });
+}
+// 組員儲存後，把自己沒在改的欄位換成最新內容
+function syncFields(){
+  document.querySelectorAll('[data-k]').forEach(el=>{
+    const k=el.dataset.k; if(S.dirty.has(k)||el===document.activeElement) return;
+    const v=getPath(S.data,k);
+    if(el.type==='radio') el.checked=String(v)===el.value; else el.value=v==null?'':v;
+  });
+  const line=$('#tokLine');
+  if(line&&!S.dirty.has('s1.marked')){ const mk=new Set(getPath(S.data,'s1.marked')||[]); line.querySelectorAll('.tok[data-i]').forEach(b=>b.classList.toggle('marked',mk.has(+b.dataset.i))) }
+  ['s1','human','ai','s3'].forEach(k=>showSaved(k));
+}
+
+// ====== 畫面骨架 ======
+const app=$('#app');
+function render(){
+  if(S.view==='teacher'&&S.t.unlocked){ renderTeacher(); return }
+  if(!S.group){ S.view='login'; renderLogin(); return }
+  S.view='student'; renderStudent();
+}
+function renderLogin(){
+  app.innerHTML=`<main class="wrap"><div class="page">
+    <div><div class="kicker">華語文教學 · 詞彙誤代偏誤分析</div><h1 style="margin-top:6px">偏誤句小組任務單</h1>
+      <p class="lead" style="margin-top:8px">點你們的組別就可以開始。全組共用一份答案，任何人按「儲存」，組員的畫面都會一起更新。</p></div>
+    <div class="card stack">
+      <h2>你是第幾組？</h2>
+      <div class="gpick">${Array.from({length:TOTAL_GROUPS},(_,i)=>i+1).map(g=>`<button type="button" data-g="${g}"><strong>${g}</strong><span>偏誤句 ${sentenceForGroup(g).id}</span></button>`).join('')}</div>
+      <p class="status" id="modePill"></p>
+    </div>
+    <details class="card soft help">
+      <summary>教師入口</summary>
+      <form class="row" id="teacherForm" style="margin-top:10px">
+        <input type="password" id="inCode" placeholder="通關碼" style="flex:1;min-width:140px" autocomplete="off">
+        <button class="btn ghost" type="submit">進入教師端</button>
+      </form>
+      <p class="status" id="codeMsg"></p>
+      ${S.t.unlocked?'<p class="small" style="margin-top:6px"><a href="#" id="goTeacher">已解鎖教師端，直接進入 →</a></p>':''}
+    </details>
+  </div></main>`;
+  app.querySelectorAll('[data-g]').forEach(b=>b.addEventListener('click',()=>{ S.group=+b.dataset.g; lsSet(LS.group,S.group); loadLocal(); S.page=0; lsSet(LS.page,0); subscribeGroup(); render() }));
+  $('#teacherForm').addEventListener('submit',e=>{ e.preventDefault();
+    if($('#inCode').value===TEACHER_CODE){ S.t.unlocked=true; lsSet(LS.teacher,true); S.view='teacher'; subscribeTeacher(); render() }
+    else { $('#codeMsg').textContent='通關碼不對，再試一次。'; $('#codeMsg').className='status warn' }
+  });
+  const gt=$('#goTeacher'); if(gt) gt.addEventListener('click',e=>{ e.preventDefault(); S.view='teacher'; subscribeTeacher(); render() });
+  renderModePill();
+}
+const MODE_TEXT={
+  pending:['正在連線…','… 連線中',''],
+  db:['已連線：答案會直接存給老師。','● 即時儲存','ok'],
+  sheet:['已連線 Google 試算表：答案會直接存給老師。','● 存到試算表','ok'],
+  local:['沒有連到老師的資料庫：答案會先存在這台裝置，最後按「複製本組答案」交給老師。','○ 存在本機','warn'],
+};
+function renderModePill(){
+  const m=MODE_TEXT[S.mode]||MODE_TEXT.pending;
+  const el=$('#modePill'); if(el){ el.textContent=m[0]; el.className='status '+m[2] }
+  const p=$('#modeMini'); if(p){ p.textContent=m[1]; p.className='pill '+m[2] }
+}
+
+function renderStudent(){
+  app.innerHTML=`
+  <div class="top"><div class="top-in">
+    <div class="bar">
+      <span class="gname">第 ${S.group} 組 · 偏誤句 ${sentenceForGroup(S.group).id}</span>
+      <div class="row" style="gap:6px"><span class="pill" id="modeMini"></span><button class="btn ghost sm" id="btnCopyAll">複製本組答案</button><button class="btn ghost sm" id="btnLeave">換組</button></div>
+    </div>
+    <nav class="rail" id="rail" aria-label="任務頁"></nav>
+  </div></div>
+  <main class="wrap"><div id="banner"></div><div id="pageBody"></div></main>
+  <div class="foot"><div class="foot-in"><button class="btn ghost" id="prev">← 上一頁</button><span class="pos" id="pos"></span><button class="btn" id="next">下一頁 →</button></div></div>`;
+  $('#btnLeave').addEventListener('click',()=>{ lsDel(LS.group); S.group=null; if(S.groupUnsub){S.groupUnsub();S.groupUnsub=null} S.dirty.clear(); render() });
+  $('#btnCopyAll').addEventListener('click',()=>copyText(summaryText()));
+  $('#prev').addEventListener('click',()=>go(S.page-1));
+  $('#next').addEventListener('click',()=>go(S.page+1));
+  renderModePill(); renderRail(); renderBanner(); renderPage();
+}
+function go(i){ if(i<0||i>=PAGES.length) return; S.page=i; lsSet(LS.page,i); renderRail(); renderPage(); window.scrollTo({top:0}) }
+function secDone(sec){
+  const d=S.data;
+  return sec==='s1'?!!(d.s1&&d.s1.fix) : sec==='human'?!!(d.human&&d.human.explain) : sec==='ai'?!!(d.ai&&d.ai.aiExplain) : sec==='s3'?!!(d.s3&&d.s3.final) : false;
+}
+function renderRail(){
+  const r=$('#rail'); if(!r) return;
+  r.innerHTML=PAGES.map((p,i)=>`<button data-i="${i}" class="${i===S.page?'on':''} ${p.cls||''} ${p.sec&&secDone(p.sec)?'done':''}">${p.nav}</button>`).join('');
+  r.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>go(+b.dataset.i)));
+  const on=r.querySelector('.on'); if(on&&on.scrollIntoView) on.scrollIntoView({block:'nearest',inline:'center'});
+  const pos=$('#pos'); if(pos) pos.textContent=(S.page+1)+' / '+PAGES.length;
+  const pv=$('#prev'), nx=$('#next'); if(pv) pv.disabled=S.page===0; if(nx) nx.disabled=S.page===PAGES.length-1;
+}
+function renderBanner(){
+  const el=$('#banner'); if(!el) return;
+  const c=S.cls, st=c&&STAGES.find(s=>s.n===c.stage);
+  if(!st){ el.innerHTML=''; return }
+  el.innerHTML=`<div class="banner" style="margin-bottom:16px"><span>老師現在進行：<strong>階段 ${st.n} ${st.title}</strong></span><span class="timer" id="clsTimer"></span></div>`;
+  tickClass(c.stageStartedAt?new Date(c.stageStartedAt).getTime():null,st.min);
+}
+let clsTick; function tickClass(started,min){ clearInterval(clsTick); if(!started) return; const f=()=>{ const el=$('#clsTimer'); if(!el){clearInterval(clsTick);return} const left=min*60-(Date.now()-started)/1000; el.textContent=(left>=0?'還剩 ':'超時 ')+mmss(Math.abs(left)); el.style.color=left<0?'var(--mark)':'' }; f(); clsTick=setInterval(f,1000) }
+
+// ====== 欄位 ======
+function ta(k,label,hint,ph,rows){ const v=getPath(S.data,k); return `<label class="f">${label}${hint?`<span class="hint">${hint}</span>`:''}<textarea data-k="${k}" rows="${rows||3}" placeholder="${esc(ph||'')}">${esc(v||'')}</textarea></label>` }
+function inp(k,label,ph){ const v=getPath(S.data,k); return `<label class="f">${label}<input type="text" data-k="${k}" placeholder="${esc(ph||'')}" value="${esc(v||'')}"></label>` }
+function saveBar(sec,text,cls){ return `<div class="savebar"><span class="status" data-status="${sec}"></span><button class="btn ${cls||''}" data-save="${sec}">${text||'儲存'}</button></div>` }
+function collect(sec){ const o={}; document.querySelectorAll('[data-k^="'+sec+'."]').forEach(el=>{ const f=el.dataset.k.split('.')[1]; if(el.type==='radio'){ if(el.checked) o[f]=el.value } else o[f]=el.value.trim() }); return o }
+function sentCard(){ const s=sentenceForGroup(S.group); return `<div class="card soft"><div class="kicker">我們的句子 · 偏誤句 ${s.id}</div><p class="sent" style="margin-top:4px">${esc(s.text)}</p></div>` }
+function head(kicker,title,min,cls){ return `<div class="row" style="justify-content:space-between;align-items:flex-end"><div><div class="kicker ${cls||''}">${kicker}</div><h2 style="margin-top:4px">${title}</h2></div>${min?`<span class="chip acc">約 ${min} 分鐘</span>`:''}</div>` }
+
+function renderPage(){
+  const el=$('#pageBody'); if(!el) return;
+  const p=PAGES[S.page], sent=sentenceForGroup(S.group);
+  const stageMin=n=>(STAGES.find(s=>s.n===n)||{}).min||'';
+  let h='';
+  if(p.id==='start'){
+    h=`<div class="page">
+      ${head('第 '+S.group+' 組','今天要做什麼？')}
+      ${sentCard()}
+      <p>這是一位華語學習者寫的句子，裡面有<strong>用錯的詞</strong>（誤代：該用甲詞，卻用了乙詞）。今天全組要一起找出錯誤、說明原因，也看看 AI 說得對不對。</p>
+      <div class="flow">
+        <div><span class="t">${stageMin(1)} 分鐘 · 全組</span><b>1 找誤代詞</b>憑語感找出用錯的詞</div>
+        <div><span class="t">${stageMin(2)} 分鐘 · 分兩隊</span><b>2 分隊分析</b>人類分析小隊查 CWN；AI 分析小隊問 AI</div>
+        <div><span class="t">${stageMin(3)} 分鐘 · 全組</span><b>3 比較與結論</b>比一比誰說得對，寫下結論</div>
+      </div>
+      <div class="card stack">
+        <h3>階段 2 要分成兩隊（每隊約 3 人）</h3>
+        <p class="small muted">先討論好誰在哪一隊。到了階段 2，點你那一隊的頁面。</p>
+        <div class="teams">
+          <button class="team human" data-jump="human"><strong>人類分析小隊</strong><span class="small">用中文詞彙網路（CWN）查詞義，自己分析、自己解釋。</span></button>
+          <button class="team ai" data-jump="ai"><strong>AI 分析小隊</strong><span class="small">請 AI 分析句子，並請 AI 做一個練習網頁。</span></button>
+        </div>
+      </div>
+      <p class="small muted">每一頁寫完記得按「儲存」。有人儲存後，組員的畫面會自動更新；你正在打字的欄位不會被蓋掉（框線變橘色＝還沒儲存）。</p>
+    </div>`;
+  }
+  else if(p.id==='s1'){
+    const marked=new Set(getPath(S.data,'s1.marked')||[]);
+    h=`<div class="page">
+      ${head('階段 1 · 全組一起','找出用錯的詞',stageMin(1))}
+      <ol class="todo">
+        <li><div><strong>先不要查資料，也不要問 AI。</strong><br><span class="small muted">大家一起讀句子，用語感判斷。</span></div></li>
+        <li><div><strong>哪個詞怪怪的？在下面的句子裡點它。</strong><br><span class="small muted">可以點好幾個，再點一次就取消。</span></div></li>
+        <li><div><strong>寫下要改成什麼，還有為什麼。</strong><br><span class="small muted">理由寫直覺就好，等一下會拿來比較。</span></div></li>
+      </ol>
+      <div class="card stack">
+        <div class="kicker">點選用錯的詞 · 偏誤句 ${sent.id}</div>
+        <p class="sent" id="tokLine">${sent.tokens.map((t,i)=>PUNCT.test(t)?`<span class="tok punct">${esc(t)}</span>`:`<button type="button" class="tok ${marked.has(i)?'marked':''}" data-i="${i}">${esc(t)}</button>`).join('')}</p>
+        ${inp('s1.fix','要改成什麼？','例：參觀 → 拜訪')}
+        ${ta('s1.why','為什麼？','','例：參觀的對象是地方，不是人。',2)}
+        ${saveBar('s1')}
+      </div>
+    </div>`;
+  }
+  else if(p.id==='human'){
+    h=`<div class="page">
+      ${head('階段 2 · 人類分析小隊','用 CWN 查詞、自己分析',stageMin(2),'human')}
+      ${sentCard()}
+      <ol class="todo human">
+        <li><div><strong>打開 CWN，查「用錯的詞」。</strong><br><span class="small muted">看它有哪幾個意思（義項）。學習者以為的是哪一個？</span> <a class="btn sm human" style="margin-left:4px" href="${CWN_URL}" target="_blank" rel="noopener">打開 CWN ↗</a></div></li>
+        <li><div><strong>再查「正確的詞」，比一比。</strong><br><span class="small muted">兩個詞哪裡一樣、哪裡不一樣？常跟什麼詞一起用？</span></div></li>
+        <li><div><strong>用學習者聽得懂的話解釋。</strong></div></li>
+        <li><div><strong>想一個教法。</strong><br><span class="small muted">從兩個詞的關係開始教，例如它們是近義詞、或一個範圍大一個範圍小。</span></div></li>
+      </ol>
+      <div class="card human stack">
+        <h3>查詞紀錄</h3>
+        <div class="cmp">
+          <div class="wrong"><span class="lbl">用錯的詞</span><input type="text" data-k="human.wrongWord" placeholder="例：參觀" value="${esc(getPath(S.data,'human.wrongWord')||'')}"><textarea data-k="human.wrongSense" rows="3" placeholder="CWN 上它的意思（義項）、例句">${esc(getPath(S.data,'human.wrongSense')||'')}</textarea></div>
+          <div class="right"><span class="lbl">正確的詞</span><input type="text" data-k="human.rightWord" placeholder="例：拜訪" value="${esc(getPath(S.data,'human.rightWord')||'')}"><textarea data-k="human.rightSense" rows="3" placeholder="CWN 上它的意思（義項）、例句">${esc(getPath(S.data,'human.rightSense')||'')}</textarea></div>
+        </div>
+        ${ta('human.diff','兩個詞差在哪裡？','意思、搭配的詞、用在什麼對象…','例：參觀＋地方（博物館），拜訪＋人（老師）。',2)}
+        ${ta('human.explain','跟學習者怎麼說？','一兩句話，學習者要聽得懂。','例：「參觀」是去看一個地方；要去看一個人，要說「拜訪」。',2)}
+        ${ta('human.plan','教學計畫','用什麼關係切入？三個步驟＋一題練習。','例：近義詞比較 → 1. … 2. … 3. … ／練習：…',4)}
+        ${saveBar('human','儲存人類分析','human')}
+      </div>
+    </div>`;
+  }
+  else if(p.id==='ai'){
+    const t1=tplGemini(sent.text);
+    h=`<div class="page">
+      ${head('階段 2 · AI 分析小隊','請 AI 分析，並做一個練習網頁',stageMin(2),'ai')}
+      ${sentCard()}
+      <ol class="todo ai">
+        <li><div><strong>複製「模板 1」，貼到 Gemini。</strong><br><span class="small muted">免費版就可以。Gemini 會給你：AI 的分析、一段 prompt、初步的程式碼。</span>
+          <div class="tpl"><span class="tname">模板 1 · 給 Gemini</span><button class="btn sm ai copy" data-copy="1">複製</button>${esc(t1)}</div></div></li>
+        <li><div><strong>複製「模板 2」，後面接上 Gemini 給的 prompt 和程式碼，貼到 Claude 或 ChatGPT。</strong><br><span class="small muted">Claude 會直接顯示網頁；ChatGPT 如果只給程式碼，就跟它說「請用 Canvas 預覽」。</span>
+          <div class="tpl"><span class="tname">模板 2 · 給 Claude／ChatGPT</span><button class="btn sm ai copy" data-copy="2">複製</button>${esc(TPL_BUILDER)}</div></div></li>
+        <li><div><strong>打開網頁試試看，再檢查 AI 說得對不對。</strong><br><span class="small muted">覺得 AI 說錯了？直接告訴它你們的看法，請它重新分析，然後記下來。</span></div></li>
+      </ol>
+      <details class="card soft help"><summary>小幫手：怎麼寫出好的 prompt？</summary>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
+          <span class="chip ai">說清楚 AI 的角色</span><span class="chip ai">說清楚學習者程度</span><span class="chip ai">句子原文一字不改</span><span class="chip ai">一步一步交代任務</span><span class="chip ai">說清楚要什麼樣的網頁</span><span class="chip ai">請 AI 說明判斷理由</span>
+        </div>
+      </details>
+      <div class="card ai stack">
+        <h3>AI 分析紀錄</h3>
+        ${inp('ai.aiFix','AI 說哪個詞用錯？要改成什麼？','例：參觀 → 拜訪')}
+        ${ta('ai.aiExplain','AI 的理由（直接貼上）','','把 AI 的說明貼在這裡',4)}
+        <label class="f">網頁做出來了嗎？
+          <select data-k="ai.result"><option value="">請選擇</option><option value="完成">做出來了，可以操作</option><option value="部分">做出來一部分</option><option value="未完成">沒做出來</option></select></label>
+        ${ta('ai.notes','過程中發生什麼事？','AI 哪裡說錯？你們怎麼改 prompt？','例：AI 一開始找錯詞，我們告訴它…',3)}
+        <details class="help"><summary>（選填）貼上最後用的 prompt</summary><div style="margin-top:8px">${ta('ai.prompt','最後用的 prompt','','',4)}</div></details>
+        ${saveBar('ai','儲存 AI 分析','ai')}
+      </div>
+    </div>`;
+  }
+  else if(p.id==='s3'){
+    const d=S.data, G=k=>getPath(d,k);
+    const sc=String(G('s3.score')||'');
+    h=`<div class="page">
+      ${head('階段 3 · 全組一起','比較與結論',stageMin(3))}
+      <p>兩隊先互相說明：人類分析小隊說查到什麼，AI 分析小隊說 AI 怎麼回答、展示做好的網頁。然後一起完成下面三題。</p>
+      <div class="grid g2">
+        <div class="card human stack"><span class="chip human" style="align-self:flex-start">人類分析小隊</span><p><strong>${esc(G('human.wrongWord'))||'？'} → ${esc(G('human.rightWord'))||'？'}</strong></p><p class="small">${esc(G('human.explain'))||'<span class="muted">（還沒儲存）</span>'}</p></div>
+        <div class="card ai stack"><span class="chip ai" style="align-self:flex-start">AI 分析小隊</span><p><strong>${esc(G('ai.aiFix'))||'？'}</strong></p><p class="small" style="max-height:8.5em;overflow:auto">${esc(G('ai.aiExplain'))||'<span class="muted">（還沒儲存）</span>'}</p></div>
+      </div>
+      <div class="card stack">
+        ${ta('s3.compare','① 比一比：AI 哪裡說對？哪裡說錯或漏掉了？','','例：AI 有找到用錯的詞，但理由只說「不自然」，沒說兩個詞搭配的對象不同。',3)}
+        <div class="f" style="display:flex;flex-direction:column;gap:6px;font-weight:600">AI 的分析可以給幾分？<span class="small muted" style="font-weight:400">1 分＝不能用，5 分＝可以直接拿去教</span>
+          <div class="score" role="radiogroup">${[1,2,3,4,5].map(v=>`<label><input type="radio" name="score" data-k="s3.score" value="${v}" ${sc===String(v)?'checked':''}><span>${v}</span></label>`).join('')}</div></div>
+        ${ta('s3.final','② 我們的最終答案：哪個詞錯？要改成什麼？差在哪裡？','','',3)}
+        ${ta('s3.share','③ 一句話分享：要讓 AI 幫上忙，我們自己需要懂什麼？','老師會把這句話投影出來。','',2)}
+        ${saveBar('s3')}
+      </div>
+      <div class="card soft"><strong>交作業</strong><p class="small" style="margin-top:4px">如果畫面上方顯示「存在本機」，請按「複製本組答案」，貼到老師指定的地方。</p></div>
+    </div>`;
+  }
+  el.innerHTML=h;
+  // 事件
+  el.querySelectorAll('[data-jump]').forEach(b=>b.addEventListener('click',()=>go(PAGES.findIndex(x=>x.id===b.dataset.jump))));
+  el.querySelectorAll('.tok[data-i]').forEach(b=>b.addEventListener('click',()=>{ b.classList.toggle('marked'); S.dirty.add('s1.marked') }));
+  el.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',()=>copyText(b.dataset.copy==='1'?tplGemini(sent.text):TPL_BUILDER)));
+  const sel=el.querySelector('select[data-k="ai.result"]'); if(sel) sel.value=getPath(S.data,'ai.result')||'';
+  el.querySelectorAll('[data-k]').forEach(f=>{
+    const ev=(f.tagName==='SELECT'||f.type==='radio')?'change':'input';
+    f.addEventListener(ev,()=>{ S.dirty.add(f.dataset.k); if(f.type!=='radio') f.classList.add('dirty') });
+  });
+  el.querySelectorAll('[data-save]').forEach(b=>b.addEventListener('click',()=>{
+    const sec=b.dataset.save, v=collect(sec);
+    if(sec==='s1'){ v.marked=[...el.querySelectorAll('.tok.marked')].map(x=>+x.dataset.i); v.markedWords=v.marked.map(i=>sent.tokens[i]).join('、'); S.dirty.delete('s1.marked') }
+    saveSection(sec,v);
+  }));
+  ['s1','human','ai','s3'].forEach(k=>showSaved(k));
+}
+function summaryText(){
+  const d=S.data, sent=sentenceForGroup(S.group), g=k=>getPath(d,k)||'';
+  const mk=(getPath(d,'s1.marked')||[]).map(i=>sent.tokens[i]).join('、');
+  return [`【偏誤句小組任務單】第 ${S.group} 組`,`偏誤句 ${sent.id}：${sent.text}`,'',
+    '■ 1 找誤代詞',`點選：${mk}`,`改成：${g('s1.fix')}`,`為什麼：${g('s1.why')}`,'',
+    '■ 2 人類分析小隊',`用錯的詞：${g('human.wrongWord')}｜${g('human.wrongSense')}`,`正確的詞：${g('human.rightWord')}｜${g('human.rightSense')}`,`差在哪裡：${g('human.diff')}`,`怎麼跟學習者說：${g('human.explain')}`,`教學計畫：${g('human.plan')}`,'',
+    '■ 2 AI 分析小隊',`AI 的改法：${g('ai.aiFix')}`,`AI 的理由：${g('ai.aiExplain')}`,`網頁：${g('ai.result')}`,`過程：${g('ai.notes')}`,`prompt：${g('ai.prompt')}`,'',
+    '■ 3 比較與結論',`比一比：${g('s3.compare')}`,`AI 分數：${g('s3.score')}`,`最終答案：${g('s3.final')}`,`一句話：${g('s3.share')}`].join('\n');
+}
+
+// ====== 教師端 ======
+function renderTeacher(){
+  app.innerHTML=`
+  <div class="top"><div class="top-in">
+    <div class="bar"><div class="row" style="gap:8px"><span class="gname">教師端 · 答案檢視</span><span class="pill" id="modeMini"></span></div>
+      <div class="row" style="gap:6px"><button class="btn ghost sm" id="btnExport">匯出 CSV</button><button class="btn ghost sm" id="btnExportJson">匯出 JSON</button><button class="btn ghost sm" id="btnBack">學生入口</button></div></div>
+    <nav class="rail" id="tRail"><button data-tab="overview">進度總覽</button><button data-tab="group">各組答案</button><button data-tab="proj">投影討論</button></nav>
+    <div id="tStageBar"></div>
+  </div></div>
+  <main class="wrap wide"><div id="tBody" class="page"></div></main>`;
+  app.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{ S.t.tab=b.dataset.tab; renderTeacherBody() }));
+  $('#btnBack').addEventListener('click',()=>{ S.view='login'; render() });
+  $('#btnExport').addEventListener('click',exportCSV);
+  $('#btnExportJson').addEventListener('click',exportJSON);
+  renderModePill(); renderTeacherStageBar(); renderTeacherBody();
+}
+function renderTeacherStageBar(){
+  const el=$('#tStageBar'); if(!el) return;
+  const cur=S.cls&&S.cls.stage;
+  el.innerHTML=`<div class="row" style="gap:6px"><span class="small muted">通知全班目前階段：</span>${STAGES.map(s=>`<button class="btn sm ${cur===s.n?'':'ghost'}" data-st="${s.n}">${s.n} ${s.title}</button>`).join('')}<button class="btn sm ghost" data-st="0">清除</button><span class="timer" id="clsTimer"></span></div>`;
+  el.querySelectorAll('[data-st]').forEach(b=>b.addEventListener('click',async()=>{ if(!remote()){ toast('沒有連到資料庫'); return } try{ await S.store.saveSettings({stage:+b.dataset.st,stageStartedAt:now()}); toast(+b.dataset.st?'已通知階段 '+b.dataset.st:'已清除') }catch(e){ toast('沒有成功，請再試一次') } }));
+  const st=STAGES.find(s=>s.n===cur); if(st) tickClass(S.cls.stageStartedAt?new Date(S.cls.stageStartedAt).getTime():null,st.min);
+}
+const gdoc=g=>S.t.groups['g'+g]||{};
+function heatFor(groups,sent){
+  const cnt=new Array(sent.tokens.length).fill(0); let n=0;
+  groups.forEach(g=>{ const mk=getPath(gdoc(g),'s1.marked'); if(mk&&mk.length){ n++; mk.forEach(i=>{ if(cnt[i]!=null) cnt[i]++ }) } });
+  return {n,html:sent.tokens.map((t,i)=>{ if(PUNCT.test(t)) return `<span class="tok punct">${esc(t)}</span>`; const r=n?cnt[i]/n:0; const st=r?`background:color-mix(in srgb, var(--mark) ${Math.round(20+r*60)}%, var(--surface));${r>0.5?'color:var(--accent-fg);font-weight:700':''}`:''; return `<span class="tok heat" style="${st}" title="${cnt[i]} 組">${esc(t)}${cnt[i]?`<sup style="font-size:.6em">${cnt[i]}</sup>`:''}</span>` }).join('')};
+}
+function renderTeacherBody(){
+  const el=$('#tBody'); if(!el) return; const t=S.t;
+  app.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===t.tab));
+  if(!remote()&&S.mode!=='pending'){ el.innerHTML=`<div class="card"><h2>沒有連到資料庫</h2><p style="margin-top:8px">線上版請用你自己的 Claude 帳號開啟；本機版請在 <code>content/config.js</code> 填入 Google Apps Script 網址（見 backend/README.md）。顯示「存在本機」的組別，請他們按「複製本組答案」交給你。</p></div>`; return }
+  const ans=v=>`<div class="ans ${v?'':'empty'}">${v?esc(v):'（尚未填寫）'}</div>`;
+  if(t.tab==='overview'){
+    el.innerHTML=`<div class="card stack">
+      <div class="row" style="justify-content:space-between"><h2>各組進度</h2><span class="small muted">已開始 ${Object.keys(t.groups).length} / ${TOTAL_GROUPS} 組</span></div>
+      <div class="ggrid">${Array.from({length:TOTAL_GROUPS},(_,i)=>i+1).map(g=>{ const d=gdoc(g); const f=[!!(d.s1&&d.s1.fix),!!(d.human&&d.human.explain),!!(d.ai&&d.ai.aiExplain),!!(d.s3&&d.s3.final)]; return `<button class="gcell" data-g="${g}"><div class="n">第 ${g} 組</div><div class="small muted">偏誤句 ${sentenceForGroup(g).id}${d.updatedAt?' · '+fmtTime(d.updatedAt):''}</div><div class="dots" title="1 找詞 / 人類小隊 / AI 小隊 / 3 結論">${f.map(x=>`<span class="${x?'on':''}"></span>`).join('')}</div></button>` }).join('')}</div>
+      <p class="small muted">四格依序是：階段 1、人類分析小隊、AI 分析小隊、階段 3。點一組看答案。</p>
+    </div>`;
+    el.querySelectorAll('[data-g]').forEach(b=>b.addEventListener('click',()=>{ t.sel=+b.dataset.g; t.tab='group'; renderTeacherBody() }));
+  }
+  else if(t.tab==='group'){
+    const g=t.sel, sent=sentenceForGroup(g), d=gdoc(g), G=k=>getPath(d,k), mk=new Set(G('s1.marked')||[]);
+    el.innerHTML=`
+      <div class="row"><select id="selG" style="width:auto">${Array.from({length:TOTAL_GROUPS},(_,i)=>`<option value="${i+1}" ${g===i+1?'selected':''}>第 ${i+1} 組</option>`).join('')}</select><span class="small muted">${d.updatedAt?'最後更新 '+fmtTime(d.updatedAt):'尚未開始'}</span></div>
+      <div class="card stack"><div class="kicker">階段 1 · 偏誤句 ${sent.id}</div>
+        <p class="sent">${sent.tokens.map((x,i)=>PUNCT.test(x)?esc(x):`<span class="tok heat ${mk.has(i)?'marked':''}">${esc(x)}</span>`).join('')}</p>
+        <div class="grid g2"><div><span class="small muted">改成</span>${ans(G('s1.fix'))}</div><div><span class="small muted">為什麼</span>${ans(G('s1.why'))}</div></div></div>
+      <div class="grid g2">
+        <div class="card human stack"><span class="chip human" style="align-self:flex-start">人類分析小隊</span>
+          <div class="cmp"><div class="wrong"><span class="lbl">用錯的詞：${esc(G('human.wrongWord'))||'—'}</span><span class="small">${esc(G('human.wrongSense'))}</span></div><div class="right"><span class="lbl">正確的詞：${esc(G('human.rightWord'))||'—'}</span><span class="small">${esc(G('human.rightSense'))}</span></div></div>
+          <span class="small muted">差在哪裡</span>${ans(G('human.diff'))}<span class="small muted">怎麼跟學習者說</span>${ans(G('human.explain'))}<span class="small muted">教學計畫</span>${ans(G('human.plan'))}</div>
+        <div class="card ai stack"><span class="chip ai" style="align-self:flex-start">AI 分析小隊 · 網頁：${esc(G('ai.result'))||'—'}</span>
+          <span class="small muted">AI 的改法</span>${ans(G('ai.aiFix'))}<span class="small muted">AI 的理由</span>${ans(G('ai.aiExplain'))}<span class="small muted">過程</span>${ans(G('ai.notes'))}<span class="small muted">prompt</span>${ans(G('ai.prompt'))}</div>
+      </div>
+      <div class="card stack"><h3>階段 3 · 比較與結論 <span class="chip acc">AI 分數 ${esc(G('s3.score'))||'—'}</span></h3>
+        <span class="small muted">比一比</span>${ans(G('s3.compare'))}<span class="small muted">最終答案</span>${ans(G('s3.final'))}<span class="small muted">一句話分享</span>${ans(G('s3.share'))}</div>
+      <div class="refbox"><strong>教師參考（草稿）</strong><br>${esc(sent.ref)}</div>`;
+    $('#selG').addEventListener('change',e=>{ t.sel=+e.target.value; renderTeacherBody() });
+  }
+  else if(t.tab==='proj'){
+    const sent=SENTENCES.find(s=>s.id===t.projSent)||SENTENCES[0], gs=sent.groups, h=heatFor(gs,sent);
+    el.innerHTML=`<div class="page proj">
+      <div class="row">${SENTENCES.map(s=>`<button class="btn sm ${s.id===sent.id?'':'ghost'}" data-ps="${s.id}">句 ${s.id}（第 ${s.groups.join('、')} 組）</button>`).join('')}</div>
+      <div class="card stack"><div class="kicker">各組標記 · ${h.n} 組已標記</div><p class="sent">${h.html}</p><p class="small muted">顏色越深＝越多組覺得這個詞用錯了。</p></div>
+      <div class="card stack"><h2>各組的答案</h2><div class="scroll"><table class="tbl" style="font-size:1rem"><tr><th>組</th><th>直覺改法</th><th>人類分析小隊</th><th>AI 的改法</th><th>AI 分數</th></tr>${gs.map(g=>{ const d=gdoc(g), G=k=>esc(getPath(d,k)); return `<tr><td><strong>${g}</strong></td><td>${G('s1.fix')||'—'}</td><td>${G('human.wrongWord')&&G('human.rightWord')?G('human.wrongWord')+' → '+G('human.rightWord'):'—'}</td><td>${G('ai.aiFix')||'—'}</td><td>${G('s3.score')||'—'}</td></tr>` }).join('')}</table></div></div>
+      <div class="card stack"><h2>一句話分享</h2>${gs.map(g=>{ const v=getPath(gdoc(g),'s3.share'); return `<div class="ans ${v?'':'empty'}"><strong>第 ${g} 組</strong>　${esc(v)||'（尚未填寫）'}</div>` }).join('')}</div>
+    </div>`;
+    el.querySelectorAll('[data-ps]').forEach(b=>b.addEventListener('click',()=>{ t.projSent=+b.dataset.ps; renderTeacherBody() }));
+  }
+}
+
+// ====== 匯出 ======
+function exportRows(){
+  const rows=[EXPORT_COLUMNS.map(c=>c[0])];
+  for(let g=1;g<=TOTAL_GROUPS;g++){ const d=gdoc(g); if(!d.updatedAt) continue; const s=sentenceForGroup(g);
+    rows.push(EXPORT_COLUMNS.map(([n,k])=>n==='組'?g:n==='偏誤句'?s.id:n==='1點選'?(getPath(d,'s1.markedWords')||(getPath(d,'s1.marked')||[]).map(i=>s.tokens[i]).join('、')):getPath(d,k))) }
+  return rows;
+}
+async function download(filename,data,type){
+  try{ const dl=await window.claude?.use?.('downloads'); if(dl){ await dl.save({filename,data}); return true } }catch(e){}
+  try{ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([data],{type:type||'text/plain;charset=utf-8'})); a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove() },500); return true }catch(e){ return false }
+}
+const stamp=()=>new Date().toISOString().slice(0,10);
+async function exportCSV(){
+  const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const csv='﻿'+exportRows().map(r=>r.map(q).join(',')).join('\n');
+  if(!(await download('偏誤句小組任務-'+stamp()+'.csv',csv,'text/csv;charset=utf-8'))) copyText(csv).then(()=>toast('已複製 CSV，可貼到試算表'));
+}
+async function exportJSON(){
+  const json=JSON.stringify({exportedAt:now(),mode:S.mode,groups:S.t.groups},null,2);
+  if(!(await download('偏誤句小組任務-'+stamp()+'.json',json,'application/json'))) copyText(json).then(()=>toast('已複製 JSON'));
+}
+
+// ====== 啟動 ======
+if(S.group) loadLocal();
+render();
+initStore();
+})();
+</script>
+
+</body>
+</html>
