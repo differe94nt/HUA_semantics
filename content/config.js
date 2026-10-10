@@ -11,7 +11,7 @@ window.CWN_CONFIG = {
   totalGroups: 14,                 // 全班組數
   cwnUrl: 'https://lopentu.github.io/CwnWeb/',
   // 教學頁 QR code 連到的學生任務單網址
-  studentUrl: 'https://claude.ai/artifact/4AxQFegPfkYEBcoSPt6tcr',
+  studentUrl: 'https://differe94nt.github.io/HUA_semantics/dist/student_tasks.html',
 
   // ---- 學生答案要存到哪裡 ----
   // 1. 在 claude.ai 上以 Artifact 開啟時：自動用 Artifact 的共用資料庫（即時同步）。
