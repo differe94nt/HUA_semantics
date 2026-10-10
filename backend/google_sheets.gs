@@ -267,3 +267,12 @@ function readGroups_() {
   });
   return groups;
 }
+
+// ---------- 在編輯器手動執行 ----------
+// 授權雲端硬碟並建立截圖資料夾：在上方函式選單選 authorizeDrive → 執行，
+// 授權畫面請勾選「雲端硬碟」那一項（或「全選」）。執行記錄會印出資料夾網址。
+// 想改存到別的資料夾：到「專案設定 → 指令碼屬性」新增 UPLOAD_FOLDER_ID，值填那個資料夾網址最後一段 ID。
+function authorizeDrive() {
+  const f = folder_();
+  Logger.log('截圖資料夾：' + f.getName() + '  ' + f.getUrl());
+}
