@@ -25,6 +25,7 @@ COLUMNS = [
     ('人類_正確的詞', 'human.rightWord'), ('人類_正確詞義項', 'human.rightSense'),
     ('人類_差別', 'human.diff'), ('人類_解釋', 'human.explain'), ('人類_教學計畫', 'human.plan'),
     ('AI_改法', 'ai.aiFix'), ('AI_理由', 'ai.aiExplain'), ('AI_網頁', 'ai.result'),
+    ('AI_網頁截圖', 'ai.shots'), ('AI_分享連結', 'ai.shareLink'), ('AI_建置回覆', 'ai.builderReply'),
     ('AI_過程', 'ai.notes'), ('AI_prompt', 'ai.prompt'),
     ('3比一比', 's3.compare'), ('3AI分數', 's3.score'), ('3最終答案', 's3.final'), ('3一句話', 's3.share'),
     ('更新時間', 'updatedAt'),
@@ -69,6 +70,8 @@ def to_rows(groups):
                 row.append(words or '')
             else:
                 v = get_path(doc, key)
+                if isinstance(v, list):  # 截圖清單：一行一個網址
+                    v = '\n'.join(x.get('url', '') if isinstance(x, dict) else str(x) for x in v)
                 row.append('' if v is None else v)
         rows.append(row)
     rows.sort(key=lambda r: (r[0] is None, r[0]))

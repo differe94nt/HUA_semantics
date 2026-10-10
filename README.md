@@ -52,7 +52,7 @@ docs/superpowers/specs/  設計說明
 | 情境 | 後端 | 畫面顯示 |
 |---|---|---|
 | 以 claude.ai Artifact 開啟 | Artifact 共用資料庫，全組即時同步，教師端即時看到 | ● 即時儲存 |
-| 本機檔／GitHub Pages，且 `config.js` 填了 `sheetEndpoint` | 你的 Google 試算表（Apps Script），每 8 秒同步一次 | ● 存到試算表 |
+| 本機檔／GitHub Pages，且 `config.js` 填了 `sheetEndpoint` | 你的 Google 試算表（Apps Script），每 8 秒同步一次；網頁截圖存到你的 Google 雲端硬碟 | ● 存到試算表 |
 | 以上都沒有 | 只存在學生裝置，最後按「複製本組答案」交卷 | ○ 存在本機 |
 
 教師端可「匯出 CSV」「匯出 JSON」；課後整理見 `data/README.md`。
@@ -65,7 +65,7 @@ docs/superpowers/specs/  設計說明
 
 - `s1`：`marked`（點選的詞序號）、`markedWords`、`fix`、`why`
 - `human`：`wrongWord`、`wrongSense`、`rightWord`、`rightSense`、`diff`、`explain`、`plan`
-- `ai`：`aiFix`、`aiExplain`、`result`、`notes`、`prompt`
+- `ai`：`aiFix`、`aiExplain`、`result`、`shots`（截圖清單，以試算表的 `uploads` 工作表為準）、`shareLink`、`builderReply`（做網頁的 AI 的回答）、`notes`、`prompt`
 - `s3`：`compare`、`score`（1–5）、`final`、`share`
 - 另有 `group`、`sentence`、`updatedAt`
 

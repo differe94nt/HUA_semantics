@@ -168,6 +168,15 @@ details.help summary{cursor:pointer;font-weight:600;color:var(--accent)}
 .ans.empty{color:var(--muted);font-style:italic}
 .proj .sent{font-size:1.5rem} .proj .ans{font-size:1.1rem}
 .refbox{border:1px dashed var(--warn);background:var(--warn-soft);border-radius:10px;padding:10px 14px;font-size:.9rem}
+/* screenshots */
+.drop{display:flex;flex-wrap:wrap;gap:10px;align-items:center;border:2px dashed var(--line);border-radius:10px;padding:14px;background:var(--surface2)}
+.drop.over,.drop:focus-visible{border-color:var(--ai);outline:none}
+.shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.shot{margin:0;display:flex;flex-direction:column;gap:4px;min-width:0}
+.shot a{display:block;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface2);aspect-ratio:4/3}
+.shot img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.shots.big{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.ans.long{max-height:16em;overflow:auto;font-size:.85rem}
 .toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:.9rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
 .toast.show{opacity:1}
 @media (prefers-reduced-motion:no-preference){ .page{animation:in .22s ease-out} @keyframes in{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}} }
@@ -208,7 +217,7 @@ const tplGemini=sent=>String((C.templates&&C.templates.gemini)||'').split('{{sen
 const TPL_BUILDER=String((C.templates&&C.templates.builder)||'');
 
 // 匯出用的欄位（教師端 CSV；tools/export.py 也用同一組欄位）
-const EXPORT_COLUMNS=[['組'],['偏誤句'],['1點選','s1.markedWords'],['1改成','s1.fix'],['1為什麼','s1.why'],['人類_用錯的詞','human.wrongWord'],['人類_用錯詞義項','human.wrongSense'],['人類_正確的詞','human.rightWord'],['人類_正確詞義項','human.rightSense'],['人類_差別','human.diff'],['人類_解釋','human.explain'],['人類_教學計畫','human.plan'],['AI_改法','ai.aiFix'],['AI_理由','ai.aiExplain'],['AI_網頁','ai.result'],['AI_過程','ai.notes'],['AI_prompt','ai.prompt'],['3比一比','s3.compare'],['3AI分數','s3.score'],['3最終答案','s3.final'],['3一句話','s3.share'],['更新時間','updatedAt']];
+const EXPORT_COLUMNS=[['組'],['偏誤句'],['1點選','s1.markedWords'],['1改成','s1.fix'],['1為什麼','s1.why'],['人類_用錯的詞','human.wrongWord'],['人類_用錯詞義項','human.wrongSense'],['人類_正確的詞','human.rightWord'],['人類_正確詞義項','human.rightSense'],['人類_差別','human.diff'],['人類_解釋','human.explain'],['人類_教學計畫','human.plan'],['AI_改法','ai.aiFix'],['AI_理由','ai.aiExplain'],['AI_網頁','ai.result'],['AI_網頁截圖','ai.shots'],['AI_分享連結','ai.shareLink'],['AI_建置回覆','ai.builderReply'],['AI_過程','ai.notes'],['AI_prompt','ai.prompt'],['3比一比','s3.compare'],['3AI分數','s3.score'],['3最終答案','s3.final'],['3一句話','s3.share'],['更新時間','updatedAt']];
 
 // ====== 小工具 ======
 const $=(s,el)=>(el||document).querySelector(s);
@@ -227,6 +236,10 @@ function copyText(text){
   return navigator.clipboard.writeText(text).then(()=>toast('已複製'),fallback);
 }
 const getPath=(o,p)=>p.split('.').reduce((a,k)=>a&&a[k],o);
+// 匯出／摘要用：截圖清單變成一行一個網址
+const plain=v=>Array.isArray(v)?v.map(x=>x&&typeof x==='object'?(x.url||x.name||''):String(x)).join('\n'):v;
+const safeUrl=u=>/^https?:\/\//i.test(String(u||''))?String(u):'';
+const MAX_SHOTS=6;
 const clone=o=>JSON.parse(JSON.stringify(o));
 
 // ====== 儲存後端 ======
@@ -266,11 +279,21 @@ function makeSheetStore(url){
     if(!r.ok) throw new Error('HTTP '+r.status);
     const j=await r.json(); if(!j.ok) throw new Error(j.error||'save failed'); return j;
   }
+  async function get(q){
+    const r=await fetch(withQ(q+'&_='+Date.now()),{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status);
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'load failed'); return j;
+  }
+  // 學生只抓自己這一組，只有教師端抓全班，減少流量
+  function query(){
+    const ids=[...L.group.keys()].filter(id=>L.group.get(id).size);
+    if(L.groups.size||ids.length>1) return 'action=all';
+    return 'action=group&id='+encodeURIComponent(ids[0]||'none');
+  }
   async function pull(){
     if(pulling) return; pulling=true;
-    try{ const r=await fetch(withQ('action=all&_='+Date.now()),{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status);
-      const j=await r.json(); if(!j.ok) throw new Error(j.error||'load failed');
-      cache={groups:j.groups||{},settings:j.settings||{}}; notify(); }
+    try{ const q=query(), j=await get(q);
+      if(q==='action=all') cache.groups=j.groups||{}; else Object.assign(cache.groups,j.groups||{});
+      cache.settings=j.settings||{}; notify(); }
     finally{ pulling=false }
   }
   function notify(){
@@ -278,16 +301,21 @@ function makeSheetStore(url){
     L.settings.forEach(cb=>cb(cache.settings.class||{}));
     L.group.forEach((set,id)=>{ if(cache.groups[id]) set.forEach(cb=>cb(clone(cache.groups[id]))) });
   }
-  function ensurePolling(){ if(timer) return; pull().catch(noop); timer=setInterval(()=>{ if(document.visibilityState==='visible') pull().catch(noop) },POLL) }
+  function ensurePolling(){ if(timer) return; timer=setInterval(()=>{ if(document.visibilityState==='visible') pull().catch(noop) },POLL) }
   // 訂閱時先給目前快取的內容，並立刻重新抓一次，之後靠定時輪詢
   const sub=(set,cb,initial)=>{ set.add(cb); if(initial!==undefined) cb(initial); ensurePolling(); pull().catch(noop); return ()=>set.delete(cb) };
+  // 截圖清單由試算表的 uploads 工作表管理；這裡只更新快取，讓教師端立刻看到
+  function setShots(id,shots){ const d=cache.groups[id]; if(d) cache.groups[id]=Object.assign({},d,{ai:Object.assign({},d.ai,{shots:shots||[]})}); L.groups.forEach(cb=>cb(cache.groups)) }
   return { mode:'sheet',
     async saveGroup(id,data){ await post({type:'group',id,data}); cache.groups[id]=clone(data); notify() },
     async saveSettings(data){ await post({type:'settings',id:'class',data}); cache.settings.class=clone(data); notify() },
     watchGroup(id,cb){ if(!L.group.has(id)) L.group.set(id,new Set()); return sub(L.group.get(id),cb,cache.groups[id]&&clone(cache.groups[id])) },
     watchGroups:cb=>sub(L.groups,cb,cache.groups),
     watchSettings:cb=>sub(L.settings,cb,cache.settings.class||{}),
-    ping:()=>pull(),
+    // 上傳截圖到老師的 Google 雲端硬碟（backend/google_sheets.gs 的 upload）
+    async upload(o){ const j=await post({type:'upload',id:o.group,name:o.name,mime:o.mime,data:o.data}); setShots(o.group,j.shots); return j.shots||[] },
+    async unshot(group,fileId){ const j=await post({type:'unshot',id:group,fileId}); setShots(group,j.shots); return j.shots||[] },
+    ping:()=>get('action=ping'),
   };
 }
 
@@ -305,7 +333,7 @@ function loadLocal(){ S.data=S.group?(lsGet(LS.data+S.group)||{}):{} }
 async function saveSection(sec,val){
   if(!S.group) return;
   val.at=now();
-  S.data=Object.assign({},S.data,{[sec]:val,group:S.group,sentence:sentenceForGroup(S.group).id,updatedAt:now()});
+  S.data=Object.assign({},S.data,{[sec]:Object.assign({},S.data[sec],val),group:S.group,sentence:sentenceForGroup(S.group).id,updatedAt:now()});
   lsSet(LS.data+S.group,S.data);
   [...S.dirty].filter(k=>k.startsWith(sec+'.')).forEach(k=>S.dirty.delete(k));
   document.querySelectorAll('[data-k^="'+sec+'."]').forEach(el=>el.classList.remove('dirty'));
@@ -344,7 +372,7 @@ async function initStore(){
     try{ await sheet.ping(); store=sheet }catch(e){ console.warn('Google 試算表連不上，改存本機：',e) }
   }
   if(!store) store=makeLocalStore();
-  S.store=store; S.mode=store.mode; renderModePill();
+  S.store=store; S.mode=store.mode; renderModePill(); renderShots();
   if(remote()){
     store.watchSettings(cls=>{ S.cls=cls||{}; renderBanner(); renderTeacherStageBar() });
     if(S.group) subscribeGroup();
@@ -376,6 +404,69 @@ function syncFields(){
   const line=$('#tokLine');
   if(line&&!S.dirty.has('s1.marked')){ const mk=new Set(getPath(S.data,'s1.marked')||[]); line.querySelectorAll('.tok[data-i]').forEach(b=>b.classList.toggle('marked',mk.has(+b.dataset.i))) }
   ['s1','human','ai','s3'].forEach(k=>showSaved(k));
+  renderShots();
+}
+
+// ====== 截圖上傳 ======
+const thumbUrl=s=>s&&s.id?'https://drive.google.com/thumbnail?id='+encodeURIComponent(s.id)+'&sz=w800':safeUrl(s&&s.url);
+function shotFigure(s,i,removable){
+  return `<figure class="shot"><a href="${esc(safeUrl(s.url))}" target="_blank" rel="noopener" title="在雲端硬碟開啟"><img src="${esc(thumbUrl(s))}" alt="${esc(s.name||'網頁截圖')}" loading="lazy"></a>${removable?`<button type="button" class="btn sm ghost" data-unshot="${esc(s.id)}">移除</button>`:''}</figure>`;
+}
+let uploading=false;
+function renderShots(){
+  const box=$('#shotsBox'); if(!box) return;
+  const shots=getPath(S.data,'ai.shots')||[], can=!!(S.store&&S.store.upload);
+  box.innerHTML=`<div class="f" style="display:flex;flex-direction:column;gap:6px;font-weight:600">網頁截圖
+      <span class="hint">把 AI 做出來的網頁截圖上傳（可以多張，最多 ${MAX_SHOTS} 張），截圖會存到老師的雲端硬碟。電腦上也可以點一下框框，再按 ⌘V／Ctrl+V 直接貼上截圖。</span>
+      ${can?`<div class="drop" id="shotDrop" tabindex="0"><input type="file" id="shotInput" accept="image/*" multiple hidden><button type="button" class="btn sm ai" id="shotPick" ${uploading||shots.length>=MAX_SHOTS?'disabled':''}>選擇圖片</button><span class="small muted" id="shotMsg">${uploading?'上傳中…':shots.length>=MAX_SHOTS?'已達上限':'或把圖片拖進來、貼上'}</span></div>`
+        :`<div class="refbox">${S.mode==='pending'?'正在連線…':'這個版本沒有連到老師的雲端硬碟，不能上傳截圖。請在下面貼上網頁的分享連結，或依老師指示另外繳交截圖。'}</div>`}
+      ${shots.length?`<div class="shots">${shots.map((x,i)=>shotFigure(x,i,can)).join('')}</div>`:''}
+    </div>`;
+  if(!can) return;
+  const input=$('#shotInput'), drop=$('#shotDrop');
+  $('#shotPick').addEventListener('click',()=>input.click());
+  input.addEventListener('change',()=>{ uploadShots(input.files); input.value='' });
+  drop.addEventListener('dragover',e=>{ e.preventDefault(); drop.classList.add('over') });
+  drop.addEventListener('dragleave',()=>drop.classList.remove('over'));
+  drop.addEventListener('drop',e=>{ e.preventDefault(); drop.classList.remove('over'); uploadShots(e.dataTransfer.files) });
+  drop.addEventListener('paste',e=>{ const f=[...(e.clipboardData&&e.clipboardData.files||[])]; if(f.length){ e.preventDefault(); uploadShots(f) } });
+  box.querySelectorAll('[data-unshot]').forEach(b=>b.addEventListener('click',async()=>{
+    if(!confirm('要移除這張截圖嗎？')) return;
+    try{ setShotsLocal(await S.store.unshot('g'+S.group,b.dataset.unshot)); toast('已移除') }catch(e){ toast('沒有成功：'+(e&&e.message||e)) }
+  }));
+}
+function setShotsLocal(shots){
+  S.data=Object.assign({},S.data,{ai:Object.assign({},S.data.ai,{shots})});
+  lsSet(LS.data+S.group,S.data); renderShots();
+}
+// 縮小成最長邊 1600px 的 JPEG，上傳比較快，也不會超過大小限制
+async function imageToJpeg(file){
+  const src=URL.createObjectURL(file);
+  try{
+    const img=await new Promise((res,rej)=>{ const im=new Image(); im.onload=()=>res(im); im.onerror=()=>rej(new Error('讀不到這張圖片')); im.src=src });
+    const k=Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight));
+    const c=document.createElement('canvas'); c.width=Math.max(1,Math.round(img.naturalWidth*k)); c.height=Math.max(1,Math.round(img.naturalHeight*k));
+    const ctx=c.getContext('2d'); ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,c.width,c.height); ctx.drawImage(img,0,0,c.width,c.height);
+    return c.toDataURL('image/jpeg',0.85).split(',')[1];
+  } finally { URL.revokeObjectURL(src) }
+}
+async function uploadShots(list){
+  if(uploading||!S.store||!S.store.upload) return;
+  let files=[...(list||[])].filter(f=>f&&/^image\//.test(f.type||''));
+  if(!files.length){ toast('請選擇圖片檔'); return }
+  const room=MAX_SHOTS-(getPath(S.data,'ai.shots')||[]).length;
+  if(room<=0){ toast('最多 '+MAX_SHOTS+' 張'); return }
+  if(files.length>room){ toast('只會上傳前 '+room+' 張'); files=files.slice(0,room) }
+  uploading=true; renderShots(); let ok=0;
+  for(let i=0;i<files.length;i++){
+    const msg=$('#shotMsg'); if(msg) msg.textContent='上傳中 '+(i+1)+' / '+files.length+'…';
+    try{
+      const data=await imageToJpeg(files[i]);
+      const name=String(files[i].name||'screenshot').replace(/\.[^.]+$/,'').slice(0,60)+'.jpg';
+      setShotsLocal(await S.store.upload({group:'g'+S.group,name,mime:'image/jpeg',data})); ok++;
+    }catch(e){ toast('上傳失敗：'+(e&&e.message||e)) }
+  }
+  uploading=false; renderShots(); if(ok) toast('已上傳 '+ok+' 張');
 }
 
 // ====== 畫面骨架 ======
@@ -464,7 +555,7 @@ function renderBanner(){
 let clsTick; function tickClass(started,min){ clearInterval(clsTick); if(!started) return; const f=()=>{ const el=$('#clsTimer'); if(!el){clearInterval(clsTick);return} const left=min*60-(Date.now()-started)/1000; el.textContent=(left>=0?'還剩 ':'超時 ')+mmss(Math.abs(left)); el.style.color=left<0?'var(--mark)':'' }; f(); clsTick=setInterval(f,1000) }
 
 // ====== 欄位 ======
-function ta(k,label,hint,ph,rows){ const v=getPath(S.data,k); return `<label class="f">${label}${hint?`<span class="hint">${hint}</span>`:''}<textarea data-k="${k}" rows="${rows||3}" placeholder="${esc(ph||'')}">${esc(v||'')}</textarea></label>` }
+function ta(k,label,hint,ph,rows){ const v=getPath(S.data,k); return `<label class="f">${label}${hint?`<span class="hint">${hint}</span>`:''}<textarea data-k="${k}" maxlength="200000" rows="${rows||3}" placeholder="${esc(ph||'')}">${esc(v||'')}</textarea></label>` }
 function inp(k,label,ph){ const v=getPath(S.data,k); return `<label class="f">${label}<input type="text" data-k="${k}" placeholder="${esc(ph||'')}" value="${esc(v||'')}"></label>` }
 function saveBar(sec,text,cls){ return `<div class="savebar"><span class="status" data-status="${sec}"></span><button class="btn ${cls||''}" data-save="${sec}">${text||'儲存'}</button></div>` }
 function collect(sec){ const o={}; document.querySelectorAll('[data-k^="'+sec+'."]').forEach(el=>{ const f=el.dataset.k.split('.')[1]; if(el.type==='radio'){ if(el.checked) o[f]=el.value } else o[f]=el.value.trim() }); return o }
@@ -549,6 +640,7 @@ function renderPage(){
         <li><div><strong>複製「模板 2」，後面接上 Gemini 給的 prompt 和程式碼，貼到 Claude 或 ChatGPT。</strong><br><span class="small muted">Claude 會直接顯示網頁；ChatGPT 如果只給程式碼，就跟它說「請用 Canvas 預覽」。</span>
           <div class="tpl"><span class="tname">模板 2 · 給 Claude／ChatGPT</span><button class="btn sm ai copy" data-copy="2">複製</button>${esc(TPL_BUILDER)}</div></div></li>
         <li><div><strong>打開網頁試試看，再檢查 AI 說得對不對。</strong><br><span class="small muted">覺得 AI 說錯了？直接告訴它你們的看法，請它重新分析，然後記下來。</span></div></li>
+        <li><div><strong>把網頁截圖上傳，並把做網頁的 AI 的回答整段貼上。</strong><br><span class="small muted">老師看不到你們螢幕上的預覽，所以要用截圖交網頁；回答裡有程式碼也沒關係，一起貼上。</span></div></li>
       </ol>
       <details class="card soft help"><summary>小幫手：怎麼寫出好的 prompt？</summary>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
@@ -561,6 +653,9 @@ function renderPage(){
         ${ta('ai.aiExplain','AI 的理由（直接貼上）','','把 AI 的說明貼在這裡',4)}
         <label class="f">網頁做出來了嗎？
           <select data-k="ai.result"><option value="">請選擇</option><option value="完成">做出來了，可以操作</option><option value="部分">做出來一部分</option><option value="未完成">沒做出來</option></select></label>
+        <div id="shotsBox"></div>
+        ${ta('ai.builderReply','做網頁的 AI 的回答（整段貼上）','貼上模板 2 之後，Claude／ChatGPT（或 Gemini）回覆的全部內容，包含程式碼。','把 AI 的回答全選、複製，貼在這裡',5)}
+        ${inp('ai.shareLink','（選填）網頁的分享連結','例：Claude 的 Artifact 分享連結、ChatGPT 的分享連結')}
         ${ta('ai.notes','過程中發生什麼事？','AI 哪裡說錯？你們怎麼改 prompt？','例：AI 一開始找錯詞，我們告訴它…',3)}
         <details class="help"><summary>（選填）貼上最後用的 prompt</summary><div style="margin-top:8px">${ta('ai.prompt','最後用的 prompt','','',4)}</div></details>
         ${saveBar('ai','儲存 AI 分析','ai')}
@@ -604,6 +699,7 @@ function renderPage(){
     saveSection(sec,v);
   }));
   ['s1','human','ai','s3'].forEach(k=>showSaved(k));
+  renderShots();
 }
 function summaryText(){
   const d=S.data, sent=sentenceForGroup(S.group), g=k=>getPath(d,k)||'';
@@ -611,7 +707,7 @@ function summaryText(){
   return [`【偏誤句小組任務單】第 ${S.group} 組`,`偏誤句 ${sent.id}：${sent.text}`,'',
     '■ 1 找誤代詞',`點選：${mk}`,`改成：${g('s1.fix')}`,`為什麼：${g('s1.why')}`,'',
     '■ 2 人類分析小隊',`用錯的詞：${g('human.wrongWord')}｜${g('human.wrongSense')}`,`正確的詞：${g('human.rightWord')}｜${g('human.rightSense')}`,`差在哪裡：${g('human.diff')}`,`怎麼跟學習者說：${g('human.explain')}`,`教學計畫：${g('human.plan')}`,'',
-    '■ 2 AI 分析小隊',`AI 的改法：${g('ai.aiFix')}`,`AI 的理由：${g('ai.aiExplain')}`,`網頁：${g('ai.result')}`,`過程：${g('ai.notes')}`,`prompt：${g('ai.prompt')}`,'',
+    '■ 2 AI 分析小隊',`AI 的改法：${g('ai.aiFix')}`,`AI 的理由：${g('ai.aiExplain')}`,`網頁：${g('ai.result')}`,`截圖：${plain(getPath(d,'ai.shots')||[])||''}`,`分享連結：${g('ai.shareLink')}`,`做網頁的 AI 的回答：${g('ai.builderReply')}`,`過程：${g('ai.notes')}`,`prompt：${g('ai.prompt')}`,'',
     '■ 3 比較與結論',`比一比：${g('s3.compare')}`,`AI 分數：${g('s3.score')}`,`最終答案：${g('s3.final')}`,`一句話：${g('s3.share')}`].join('\n');
 }
 
@@ -669,7 +765,11 @@ function renderTeacherBody(){
           <div class="cmp"><div class="wrong"><span class="lbl">用錯的詞：${esc(G('human.wrongWord'))||'—'}</span><span class="small">${esc(G('human.wrongSense'))}</span></div><div class="right"><span class="lbl">正確的詞：${esc(G('human.rightWord'))||'—'}</span><span class="small">${esc(G('human.rightSense'))}</span></div></div>
           <span class="small muted">差在哪裡</span>${ans(G('human.diff'))}<span class="small muted">怎麼跟學習者說</span>${ans(G('human.explain'))}<span class="small muted">教學計畫</span>${ans(G('human.plan'))}</div>
         <div class="card ai stack"><span class="chip ai" style="align-self:flex-start">AI 分析小隊 · 網頁：${esc(G('ai.result'))||'—'}</span>
-          <span class="small muted">AI 的改法</span>${ans(G('ai.aiFix'))}<span class="small muted">AI 的理由</span>${ans(G('ai.aiExplain'))}<span class="small muted">過程</span>${ans(G('ai.notes'))}<span class="small muted">prompt</span>${ans(G('ai.prompt'))}</div>
+          <span class="small muted">AI 的改法</span>${ans(G('ai.aiFix'))}<span class="small muted">AI 的理由</span>${ans(G('ai.aiExplain'))}
+          <span class="small muted">網頁截圖</span>${(G('ai.shots')||[]).length?`<div class="shots">${G('ai.shots').map(x=>shotFigure(x,0,false)).join('')}</div>`:ans('')}
+          <span class="small muted">分享連結</span>${safeUrl(G('ai.shareLink'))?`<div class="ans"><a href="${esc(safeUrl(G('ai.shareLink')))}" target="_blank" rel="noopener">${esc(G('ai.shareLink'))}</a></div>`:ans(G('ai.shareLink'))}
+          <span class="small muted">做網頁的 AI 的回答</span><div class="ans long ${G('ai.builderReply')?'':'empty'}">${G('ai.builderReply')?esc(G('ai.builderReply')):'（尚未填寫）'}</div>
+          <span class="small muted">過程</span>${ans(G('ai.notes'))}<span class="small muted">prompt</span>${ans(G('ai.prompt'))}</div>
       </div>
       <div class="card stack"><h3>階段 3 · 比較與結論 <span class="chip acc">AI 分數 ${esc(G('s3.score'))||'—'}</span></h3>
         <span class="small muted">比一比</span>${ans(G('s3.compare'))}<span class="small muted">最終答案</span>${ans(G('s3.final'))}<span class="small muted">一句話分享</span>${ans(G('s3.share'))}</div>
@@ -682,6 +782,7 @@ function renderTeacherBody(){
       <div class="row">${SENTENCES.map(s=>`<button class="btn sm ${s.id===sent.id?'':'ghost'}" data-ps="${s.id}">句 ${s.id}（第 ${s.groups.join('、')} 組）</button>`).join('')}</div>
       <div class="card stack"><div class="kicker">各組標記 · ${h.n} 組已標記</div><p class="sent">${h.html}</p><p class="small muted">顏色越深＝越多組覺得這個詞用錯了。</p></div>
       <div class="card stack"><h2>各組的答案</h2><div class="scroll"><table class="tbl" style="font-size:1rem"><tr><th>組</th><th>直覺改法</th><th>人類分析小隊</th><th>AI 的改法</th><th>AI 分數</th></tr>${gs.map(g=>{ const d=gdoc(g), G=k=>esc(getPath(d,k)); return `<tr><td><strong>${g}</strong></td><td>${G('s1.fix')||'—'}</td><td>${G('human.wrongWord')&&G('human.rightWord')?G('human.wrongWord')+' → '+G('human.rightWord'):'—'}</td><td>${G('ai.aiFix')||'—'}</td><td>${G('s3.score')||'—'}</td></tr>` }).join('')}</table></div></div>
+      <div class="card stack"><h2>AI 做的網頁</h2>${gs.some(g=>(getPath(gdoc(g),'ai.shots')||[]).length)?`<div class="shots big">${gs.flatMap(g=>(getPath(gdoc(g),'ai.shots')||[]).map(x=>`<div class="stack" style="gap:4px"><strong>第 ${g} 組</strong>${shotFigure(x,0,false)}</div>`)).join('')}</div>`:'<p class="muted">還沒有組別上傳截圖。</p>'}</div>
       <div class="card stack"><h2>一句話分享</h2>${gs.map(g=>{ const v=getPath(gdoc(g),'s3.share'); return `<div class="ans ${v?'':'empty'}"><strong>第 ${g} 組</strong>　${esc(v)||'（尚未填寫）'}</div>` }).join('')}</div>
     </div>`;
     el.querySelectorAll('[data-ps]').forEach(b=>b.addEventListener('click',()=>{ t.projSent=+b.dataset.ps; renderTeacherBody() }));
@@ -692,7 +793,7 @@ function renderTeacherBody(){
 function exportRows(){
   const rows=[EXPORT_COLUMNS.map(c=>c[0])];
   for(let g=1;g<=TOTAL_GROUPS;g++){ const d=gdoc(g); if(!d.updatedAt) continue; const s=sentenceForGroup(g);
-    rows.push(EXPORT_COLUMNS.map(([n,k])=>n==='組'?g:n==='偏誤句'?s.id:n==='1點選'?(getPath(d,'s1.markedWords')||(getPath(d,'s1.marked')||[]).map(i=>s.tokens[i]).join('、')):getPath(d,k))) }
+    rows.push(EXPORT_COLUMNS.map(([n,k])=>n==='組'?g:n==='偏誤句'?s.id:n==='1點選'?(getPath(d,'s1.markedWords')||(getPath(d,'s1.marked')||[]).map(i=>s.tokens[i]).join('、')):plain(getPath(d,k)))) }
   return rows;
 }
 async function download(filename,data,type){
