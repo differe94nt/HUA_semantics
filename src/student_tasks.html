@@ -641,6 +641,15 @@ function renderPage(){
           <div class="tpl"><span class="tname">模板 2 · 給 Claude／ChatGPT</span><button class="btn sm ai copy" data-copy="2">複製</button>${esc(TPL_BUILDER)}</div></div></li>
         <li><div><strong>打開網頁試試看，再檢查 AI 說得對不對。</strong><br><span class="small muted">覺得 AI 說錯了？直接告訴它你們的看法，請它重新分析，然後記下來。</span></div></li>
         <li><div><strong>把網頁截圖上傳，並把做網頁的 AI 的回答整段貼上。</strong><br><span class="small muted">老師看不到你們螢幕上的預覽，所以要用截圖交網頁；回答裡有程式碼也沒關係，一起貼上。</span></div></li>
+        <li><div><strong>網頁做成功了？存一份 HTML 檔到自己的電腦。</strong><br><span class="small muted">存下來之後，不用上網也能打開，也可以再修改，或拿去給學習者用。</span>
+          <details class="help" style="margin-top:6px"><summary>怎麼存成 HTML 檔？</summary>
+            <ul style="margin:8px 0 0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px" class="small">
+              <li><strong>Claude：</strong>網頁預覽視窗的右上角通常有「下載」或「⋯」選單，選下載，就會得到一個 .html 檔。</li>
+              <li><strong>ChatGPT／Gemini：</strong>在 Canvas（預覽畫面）右上角找「下載」或「分享／匯出」；找不到的話，按「複製程式碼」。</li>
+              <li><strong>只能複製程式碼時：</strong>Mac 打開「文字編輯」，先選「格式 → 製作純文字」再貼上；Windows 打開「記事本」貼上。存檔時檔名打 <code>第${S.group}組.html</code>（Windows 的存檔類型選「所有檔案」）。</li>
+              <li><strong>檢查：</strong>雙擊這個檔案，會用瀏覽器打開。如果一片空白或畫面不完整，通常是程式碼沒有複製完整，請回去再複製一次。</li>
+            </ul>
+          </details></div></li>
       </ol>
       <details class="card soft help"><summary>小幫手：怎麼寫出好的 prompt？</summary>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
