@@ -194,6 +194,14 @@ window.CWN_CONFIG = {
   // 教學頁 QR code 連到的學生任務單網址
   studentUrl: 'https://differe94nt.github.io/HUA_semantics/dist/student_tasks.html',
 
+  // ---- 教學頁開場的暖身提問（放在「目標一、二」上面；QR code 由網址自動產生）----
+  // 不需要這一區時，把 url 改成 '' 即可隱藏。
+  warmup: {
+    question: '如果你要 AI 幫你分析學生造句的錯誤，並製作一個教學網站，你會怎麼給指令（prompt）？',
+    url: 'https://app.sli.do/event/q5twTzCwMqxKst9WXpfs2H/live/questions',
+    where: 'Slido',
+  },
+
   // ---- 學生答案要存到哪裡 ----
   // 1. 在 claude.ai 上以 Artifact 開啟時：自動用 Artifact 的共用資料庫（即時同步）。
   // 2. 其他情況（本機檔案、GitHub Pages）：若下面填了 Google Apps Script 網址，

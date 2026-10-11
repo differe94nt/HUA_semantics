@@ -110,6 +110,9 @@ ul.clean{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
 .qr img,.qr canvas{display:block;max-width:100%}
 .url{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:.85rem;word-break:break-all;background:var(--surface2);border-radius:6px;padding:4px 8px}
 @media (max-width:640px){ .join{grid-template-columns:1fr} }
+.warm{border-left:5px solid var(--accent)}
+.warm .big-q{max-width:none}
+a.url{color:var(--fg);text-decoration:none;align-self:flex-start}
 
 /* stage + timer */
 .stagehead{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end}
@@ -168,6 +171,14 @@ window.CWN_CONFIG = {
   cwnUrl: 'https://lopentu.github.io/CwnWeb/',
   // 教學頁 QR code 連到的學生任務單網址
   studentUrl: 'https://differe94nt.github.io/HUA_semantics/dist/student_tasks.html',
+
+  // ---- 教學頁開場的暖身提問（放在「目標一、二」上面；QR code 由網址自動產生）----
+  // 不需要這一區時，把 url 改成 '' 即可隱藏。
+  warmup: {
+    question: '如果你要 AI 幫你分析學生造句的錯誤，並製作一個教學網站，你會怎麼給指令（prompt）？',
+    url: 'https://app.sli.do/event/q5twTzCwMqxKst9WXpfs2H/live/questions',
+    where: 'Slido',
+  },
 
   // ---- 學生答案要存到哪裡 ----
   // 1. 在 claude.ai 上以 Artifact 開啟時：自動用 Artifact 的共用資料庫（即時同步）。
@@ -244,6 +255,8 @@ window.CWN_CONFIG = {
 // ====== 設定：全部來自 content/config.js ======
 const C=window.CWN_CONFIG||{};
 const STUDENT_URL=C.studentUrl||'';
+const WARMUP=C.warmup||{};
+const escH=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const CWN_URL=C.cwnUrl||'https://lopentu.github.io/CwnWeb/';
 // 「1–3 組」這類標籤由 groups 自動產生
 const groupLabel=gs=>{ const a=[...gs].sort((x,y)=>x-y); const consecutive=a.every((g,i)=>i===0||g===a[i-1]+1); return (consecutive&&a.length>1?a[0]+'–'+a[a.length-1]:a.join('、'))+' 組' };
@@ -254,6 +267,14 @@ const SLIDES=[
   <div class="kicker">華語文教學系 · 詞彙AI實作課</div>
   <h1>AI與詞義偏誤</h1>
   <p class="lead">從學習者真實語料出發：用專業工具分析，並請AI 幫忙做教材，專家與AI協作合適的教材。</p>
+  ${WARMUP.url?`<div class="join card warm">
+    <div class="qr" data-qr="${escH(WARMUP.url)}">QR code 載入中</div>
+    <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+      <div class="kicker">暖身提問 · 掃描 QR code 到 ${escH(WARMUP.where||'這裡')} 回答</div>
+      <p class="big-q">${escH(WARMUP.question)}</p>
+      <a class="url" href="${escH(WARMUP.url)}" target="_blank" rel="noopener">${escH(WARMUP.url)}</a>
+    </div>
+  </div>`:''}
   <div class="grid g2">
     <div class="card"><div class="kicker">目標一</div><h3>偏誤句分析</h3><p style="margin-top:6px">找出詞彙誤代、解釋錯在哪裡，並從語意關係出發設計教學。</p></div>
     <div class="card"><div class="kicker">目標二</div><h3>用 AI 做互動教材</h3><p style="margin-top:6px">沒有程式背景也能引導 AI 做出教師端＋學生端的練習網頁，並判斷內容合不合適。</p></div>
@@ -366,7 +387,7 @@ const SLIDES=[
   <div class="kicker">今天的任務</div>
   <h2>每組一個偏誤句</h2>
   <div class="join card">
-    <div class="qr" id="qr">QR code 載入中</div>
+    <div class="qr" data-qr="${escH(STUDENT_URL)}">QR code 載入中</div>
     <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
       <h3>掃描開啟「偏誤句小組任務單」</h3>
       <p>選你的組別就能開始。全組共用一份答案，任何人按儲存都會同步給組員。</p>
@@ -505,12 +526,15 @@ function render(){
   document.getElementById('prev').disabled=idx===0;
   document.getElementById('next').disabled=idx===SLIDES.length-1;
   wireTimer();
-  if(s.id==='groups') drawQR();
+  drawQR();
 }
+// 頁面上每個 data-qr 方塊都畫成對應網址的 QR code
 function drawQR(){
-  const box=document.getElementById('qr'); if(!box) return;
-  if(typeof QRCode==='undefined'){ box.textContent='無法產生 QR code，請改用下方連結'; return }
-  box.innerHTML=''; try{ new QRCode(box,{text:STUDENT_URL,width:160,height:160,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M}) }catch(e){ box.textContent='無法產生 QR code，請改用下方連結' }
+  document.querySelectorAll('#main [data-qr]').forEach(box=>{
+    const text=box.dataset.qr; if(!text) return;
+    if(typeof QRCode==='undefined'){ box.textContent='無法產生 QR code，請改用旁邊的連結'; return }
+    box.innerHTML=''; try{ new QRCode(box,{text,width:160,height:160,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M}) }catch(e){ box.textContent='無法產生 QR code，請改用旁邊的連結' }
+  });
 }
 setInterval(()=>{ const s=SLIDES[idx]; if(s.min&&timers[s.id]&&timers[s.id].running) drawTimer() },500);
 render();

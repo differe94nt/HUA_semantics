@@ -40,6 +40,7 @@ docs/superpowers/specs/  設計說明
 1. **改內容**（換句子、改組數、改模板、改通關碼）：編輯 `content/config.js`。
    - 偏誤句在 `sentences`，`toks` 用 `|` 斷詞供學生點選，`groups` 是拿到該句的組別，`ref` 是教師參考。
    - 教學頁的「分組與任務」那一頁、任務單的句子、匯出欄位都從這裡讀，不必改兩份。
+   - 教學頁開場的暖身提問（題目與 Slido 網址）在 `warmup`；QR code 會依網址自動產生，`url` 改成 `''` 就會隱藏。
 2. **看結果**：直接用瀏覽器打開 `src/student_tasks.html` 或 `src/teaching_slides.html`。
 3. **產生可發布的檔案**：`python3 build.py`（不需要安裝任何套件；有 node 的話會順便檢查語法）。
 4. **更新線上版**：在 Cowork 新對話中貼上 Artifact 連結，請 Claude 用 `artifact_source/` 裡對應的檔案更新；已存的學生答案會保留。
