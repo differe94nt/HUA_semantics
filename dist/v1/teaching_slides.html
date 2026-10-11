@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>[hidden]{display:none!important}img{max-width:100%}</style>
+</head>
+<body>
+<title>AI與詞義偏誤工作坊</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700;900&display=swap">
+<style>
+/* Layout: projector deck — sticky section rail on top, one slide at a time (max 1100px), prev/next + teacher notes at bottom. */
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --surface2:#e8edf1; --fg:#17212b; --muted:#566271; --line:#d0d8e0;
+  --accent:#1d5f7a; --accent-fg:#ffffff; --accent-soft:#d9eaf2;
+  --mark:#c0392b; --mark-soft:#fbe3df;
+  --cwn:#1f7a5c; --cwn-soft:#dcf0e6; --ai:#6b3fb8; --ai-soft:#e9e0f8; --warn:#9a5b00; --warn-soft:#fbefd9;
+  --font-body:"Noto Sans TC",-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+  --font-display:"Noto Serif TC","Songti TC","PMingLiU",Georgia,serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#121820; --surface:#1b222b; --surface2:#252e39; --fg:#e9eef3; --muted:#9ba7b4; --line:#34404c;
+  --accent:#6fb6d4; --accent-fg:#0f1a21; --accent-soft:#1d3540;
+  --mark:#ff8a75; --mark-soft:#4a2520;
+  --cwn:#6fd0a8; --cwn-soft:#1d3a2e; --ai:#c4a7f5; --ai-soft:#332647; --warn:#f0b24a; --warn-soft:#3d2e14; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#121820; --surface:#1b222b; --surface2:#252e39; --fg:#e9eef3; --muted:#9ba7b4; --line:#34404c;
+  --accent:#6fb6d4; --accent-fg:#0f1a21; --accent-soft:#1d3540;
+  --mark:#ff8a75; --mark-soft:#4a2520;
+  --cwn:#6fd0a8; --cwn-soft:#1d3a2e; --ai:#c4a7f5; --ai-soft:#332647; --warn:#f0b24a; --warn-soft:#3d2e14; color-scheme:dark }
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:18px;line-height:1.7;margin:0}
+.shell{min-height:100%;display:flex;flex-direction:column}
+.rail{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line);padding:8px 16px}
+.rail-in{max-width:1100px;margin:0 auto;display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin}
+.rail button{flex:0 0 auto;border:0;background:transparent;color:var(--muted);border-radius:999px;padding:6px 12px;font:inherit;font-size:.8rem;font-weight:600;white-space:nowrap;cursor:pointer}
+.rail button.on{background:var(--accent);color:var(--accent-fg)}
+.rail button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+main{flex:1;width:100%;max-width:1100px;margin:0 auto;padding-inline:16px;padding-block:28px 24px}
+.slide{display:flex;flex-direction:column;gap:20px}
+.kicker{font-size:.8rem;letter-spacing:.1em;color:var(--accent);font-weight:700}
+h1,h2,h3{font-family:var(--font-display);line-height:1.3;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,5vw,3.2rem);font-weight:900}
+h2{font-size:clamp(1.5rem,3.4vw,2.2rem);font-weight:700}
+h3{font-size:1.15rem;font-weight:700}
+p{margin:0;max-width:65ch}
+a{color:var(--accent)}
+.lead{font-size:1.15rem;color:var(--muted)}
+.muted{color:var(--muted)} .small{font-size:.85rem}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.grid>*{min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px}
+.card.cwn{border-top:5px solid var(--cwn)} .card.ai{border-top:5px solid var(--ai)}
+.card.soft{background:var(--surface2);border-color:transparent}
+ul.clean{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+.chip{display:inline-block;border-radius:999px;padding:1px 10px;font-size:.8rem;font-weight:600;background:var(--surface2);color:var(--fg)}
+.chip.cwn{background:var(--cwn-soft);color:var(--cwn)} .chip.ai{background:var(--ai-soft);color:var(--ai)} .chip.acc{background:var(--accent-soft);color:var(--accent)}
+.err{color:var(--mark);font-weight:700;text-decoration:underline wavy var(--mark);text-underline-offset:4px}
+.fix{color:var(--cwn);font-weight:700}
+.ex{font-family:var(--font-display);font-size:1.3rem}
+
+/* 50-minute timeline */
+.tl{display:flex;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.tl>div{padding:10px 8px;font-size:.8rem;line-height:1.35;min-width:0;border-right:1px solid var(--line);background:var(--surface)}
+.tl>div:last-child{border-right:0}
+.tl b{display:block;font-size:.95rem;font-variant-numeric:tabular-nums}
+.tl .disc{background:var(--accent-soft)}
+@media (max-width:640px){ .tl{flex-direction:column} .tl>div{flex:auto!important;border-right:0;border-bottom:1px solid var(--line)} }
+
+/* error-type quad */
+.quad{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.quad div{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--surface)}
+.quad div.hl{border:2px solid var(--mark);background:var(--mark-soft)}
+.quad strong{font-family:var(--font-display);font-size:1.2rem;display:block}
+
+/* CWN structure diagram */
+.net{display:grid;grid-template-columns:minmax(120px,180px) 1fr;gap:14px;align-items:stretch}
+.net .lemma{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;border-radius:12px;background:var(--accent);color:var(--accent-fg);padding:16px}
+.net .lemma strong{font-family:var(--font-display);font-size:2.2rem;line-height:1.1}
+.senses{display:flex;flex-direction:column;gap:10px;min-width:0}
+.sense{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:10px;border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--surface)}
+.sense .def b{font-size:.75rem;letter-spacing:.06em;color:var(--muted);display:block}
+.rels{display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start}
+@media (max-width:640px){ .net{grid-template-columns:1fr} .sense{grid-template-columns:1fr} }
+
+/* timeline of CWN */
+.hist{display:flex;flex-direction:column;gap:0;border-left:3px solid var(--line);margin-left:6px}
+.hist div{position:relative;padding:0 0 14px 20px}
+.hist div::before{content:"";position:absolute;left:-9px;top:8px;width:15px;height:15px;border-radius:50%;background:var(--surface);border:3px solid var(--accent)}
+.hist b{font-variant-numeric:tabular-nums;font-family:var(--font-display);font-size:1.1rem;margin-right:8px}
+.person{display:flex;flex-direction:column;gap:4px}
+.person .nm{font-family:var(--font-display);font-size:1.5rem;font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stats div{border-radius:10px;background:var(--surface2);padding:12px}
+.stats b{display:block;font-family:var(--font-display);font-size:1.6rem;font-variant-numeric:tabular-nums;line-height:1.2}
+
+/* group allocation */
+.alloc{display:flex;flex-direction:column;gap:10px}
+.alloc .row{display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:start;border-bottom:1px solid var(--line);padding-bottom:10px}
+.alloc .row:last-child{border-bottom:0}
+.alloc .gp{font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+.alloc .tx{font-family:var(--font-display);font-size:1rem;line-height:1.8;min-width:0}
+@media (max-width:640px){ .alloc .row{grid-template-columns:1fr;gap:2px} }
+.join{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
+.qr{background:#ffffff;padding:10px;border-radius:10px;width:180px;height:180px;display:flex;align-items:center;justify-content:center;color:#17212b;font-size:.75rem;text-align:center}
+.qr img,.qr canvas{display:block;max-width:100%}
+.url{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:.85rem;word-break:break-all;background:var(--surface2);border-radius:6px;padding:4px 8px}
+@media (max-width:640px){ .join{grid-template-columns:1fr} }
+.warm{border-left:5px solid var(--accent)}
+.warm .big-q{max-width:none}
+a.url{color:var(--fg);text-decoration:none;align-self:flex-start}
+
+/* stage + timer */
+.stagehead{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end}
+.timer{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:8px 12px;background:var(--surface)}
+.timer .t{font-family:var(--font-display);font-size:2.4rem;font-weight:700;font-variant-numeric:tabular-nums;min-width:4.2ch;text-align:right;line-height:1}
+.timer.over .t{color:var(--mark)}
+.btn{border:1px solid var(--accent);background:var(--accent);color:var(--accent-fg);border-radius:8px;padding:8px 14px;font:inherit;font-size:.9rem;font-weight:600;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.todo{counter-reset:t;list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px}
+.todo li{counter-increment:t;display:grid;grid-template-columns:36px 1fr;gap:12px}
+.todo li>div{min-width:0}
+.todo li::before{content:counter(t);width:32px;height:32px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:700;display:flex;align-items:center;justify-content:center}
+.flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px}
+.flow>div{flex:1 1 150px;border-radius:10px;padding:10px 12px;background:var(--surface2);font-size:.9rem;min-width:0}
+.flow>div b{display:block;font-size:1rem}
+.flow .arr{flex:0 0 auto;align-self:center;background:none;padding:0;color:var(--muted);font-size:1.2rem}
+.big-q{font-family:var(--font-display);font-size:clamp(1.15rem,2.4vw,1.5rem);line-height:1.6}
+.closing{border-radius:14px;background:var(--accent);color:var(--accent-fg);padding:22px}
+.closing p{max-width:none}
+.closing .big-q{color:var(--accent-fg)}
+
+/* teacher notes + footer */
+.notes{border:1px dashed var(--warn);background:var(--warn-soft);border-radius:12px;padding:14px 16px;font-size:.95rem}
+.notes h3{color:var(--warn);font-size:1rem;margin-bottom:6px}
+.foot{position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px))}
+.foot-in{max-width:1100px;margin:0 auto;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.foot .pos{font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.toggle{display:flex;align-items:center;gap:6px;font-size:.85rem;color:var(--muted);cursor:pointer}
+@media (prefers-reduced-motion:no-preference){ .slide{animation:in .25s ease-out} @keyframes in{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}} }
+</style>
+
+<div class="shell">
+  <nav class="rail" aria-label="投影頁"><div class="rail-in" id="rail"></div></nav>
+  <main id="main"></main>
+  <div class="foot"><div class="foot-in">
+    <button class="btn ghost" id="prev">← 上一頁</button>
+    <label class="toggle"><input type="checkbox" id="notesToggle"> 教師備註</label>
+    <span class="pos" id="pos"></span>
+    <button class="btn" id="next">下一頁 →</button>
+  </div></div>
+</div>
+
+<script>
+// =====================================================================
+//  詞網與AI偏誤工作坊 · 課堂設定檔
+//  這是唯一需要編輯的檔案。改完後執行 `python3 build.py`，
+//  dist/ 與 artifact_source/ 裡的網頁會自動更新。
+//  （直接用瀏覽器開 src/ 裡的網頁，也會即時讀到這裡的設定。）
+// =====================================================================
+window.CWN_CONFIG = {
+
+  // ---- 基本 ----
+  teacherCode: 'cwn2026',          // 教師端通關碼
+  totalGroups: 14,                 // 全班組數
+  cwnUrl: 'https://lopentu.github.io/CwnWeb/',
+  // 教學頁 QR code 連到的學生任務單網址
+  studentUrl: 'https://differe94nt.github.io/HUA_semantics/dist/student_tasks.html',
+
+  // ---- 教學頁開場的暖身提問（放在「目標一、二」上面；QR code 由網址自動產生）----
+  // 不需要這一區時，把 url 改成 '' 即可隱藏。
+  warmup: {
+    question: '如果你要 AI 幫你分析學生造句的錯誤，並製作一個教學網站，你會怎麼給指令（prompt）？',
+    url: 'https://app.sli.do/event/q5twTzCwMqxKst9WXpfs2H/live/questions',
+    where: 'Slido',
+  },
+
+  // ---- 學生答案要存到哪裡 ----
+  // 1. 在 claude.ai 上以 Artifact 開啟時：自動用 Artifact 的共用資料庫（即時同步）。
+  // 2. 其他情況（本機檔案、GitHub Pages）：若下面填了 Google Apps Script 網址，
+  //    就存到你的 Google 試算表（設定步驟見 backend/README.md）。
+  // 3. 兩者都沒有：只存在學生自己的裝置，最後用「複製本組答案」交卷。
+  sheetEndpoint: 'https://script.google.com/macros/s/AKfycbys9unrQsi1idR6RbV3p8njNnBWcm5hzp3svMfb6C9XbG2d2ogjMENAGycyvoR7bJHt/exec',               // 例：'https://script.google.com/macros/s/XXXX/exec'
+  sheetPollSeconds: 8,             // 試算表模式下，多久向試算表拿一次最新答案
+
+  // ---- 階段（教師端「通知全班目前階段」與學生端橫幅）----
+  stages: [
+    { n: 1, title: '找出誤代詞', min: 5 },
+    { n: 2, title: '分隊分析',   min: 12 },
+    { n: 3, title: '比較與結論', min: 15 },
+  ],
+
+  // ---- 偏誤句 ----
+  // 語料：國家教育研究院華語中介語語料庫（2019），偏誤類型皆為詞彙誤代。
+  //   id     ：句子編號（教學頁、任務單、匯出檔都用這個編號）
+  //   groups ：拿到這一句的組別
+  //   toks   ：句子本文，用「|」斷詞，只是為了讓學生可以逐詞點選
+  //   ref    ：教師參考（只在教師端顯示；草稿，非標準答案）
+  sentences: [
+    { id: 1, groups: [1, 2, 3],
+      toks: '原因|在於|我|個人|生活|。|如果|發生|災禍|，|我|有|家人|和|朋友|可以|安慰|我|，|可以|緩和|我|的|痛苦|。|我|不|認識|的|一|位|神秘|的|上帝|無助於|減少|痛苦|。|而且|在|美國|一般|來說|，|信仰|宗教|的|人|比較|保守|，|所以|我|對於|他們|敬而遠之|。',
+      ref: '可留意：緩和／減輕（痛苦）、減少／減輕、災禍／不幸、對於／對。' },
+    { id: 2, groups: [4, 5, 6],
+      toks: '臺灣|超|多|夜市|，|很|多|小菜|，|食物|我|從來|都|沒有|看|過|，|又|好看|又|好吃|！|夜市|最|代表|好像|是|牛排|跟|臭豆腐|因為|我|去|過|好幾|個|夜市|都|問到|那|個|味道|。|我|覺得|臭豆腐|是|一|種|很|特別|的|食物|因為|它|有|辣味|，|甜味|，|鹹味|，|而|有|臭味|。',
+      ref: '可留意：小菜／小吃、問到／聞到、最代表／最具代表性的、而有／而且有／還有。' },
+    { id: 3, groups: [7, 8, 9],
+      toks: '我|傷心|或|壓力|的|時候|吸菸|使|我|的|心情|好|。|在|我|的|國家|沒有|很|多|人|抽煙|，|我|覺得|是|因為|很|多|人|都|知道|吸煙|壞|他們|的|身體|所以|他們|很|恐怕|。',
+      ref: '可留意：恐怕／害怕（副詞 vs. 動詞）、壞／傷害（對…有害）、壓力／有壓力。' },
+    { id: 4, groups: [10, 11, 12],
+      toks: '我|抱|著|咸恩|的|心情|，|因為|我|認為|很|多|人|即使|想要|也|沒有|辨法|像|我|有|這樣|的|機會|，|可以|到|台灣|來|念|大學|，|所以|我|是|個|很|幸運|的|人|，|我|想|人生|只|有|一|次|，|所以|我|要|做|我|想|做|的|事情|。',
+      ref: '可留意：咸恩、辨法屬錯字，可先區分「錯字」與「誤代」；心情／心（抱著感恩的心）、想要／想。' },
+    { id: 5, groups: [13, 14],
+      toks: '總而言之|，|台灣|也|已|成為|全球|生育率|最|低|的|國家|之一|，|越來越|多|的|人|不|結婚|，|他們|覺得|寧缺勿濫|，|只要|合不來|就|分手|。|解決|這|個|問題|的|一|種|方法|不|只是|給|錢|，|因為|除非|政府|能|針對|整體|環境|來|改善|，|否則|婦女|還是|不|會|有|生育|的|意願|，|所|政府|有|很|沉重|的|責任|。',
+      ref: '可留意：沉重／重大（責任）、方法／辦法、不只是／不能只是、所／所以。' },
+  ],
+
+  // ---- AI 分析小隊的兩個模板 ----
+  // 模板 1 裡的 {{sentence}} 會自動換成該組的偏誤句。
+  templates: {
+    gemini: `你是一位資深華語教師，也是詞彙語意學家。我要做一個給「華語教師」和「華語學習者」用的互動網頁。
+
+【偏誤句】（國教院華語中介語語料庫，偏誤類型：詞彙誤代）
+「{{sentence}}」
+
+請依序完成三件事：
+1. 找出句子裡用錯的詞，說明應該改成什麼詞。請從詞義、搭配、語意關係（近義／上下位／反義）說明為什麼錯，以及學習者為什麼會搞混。
+2. 幫我寫一段完整的 prompt，讓我交給另一個 AI（Claude 或 ChatGPT）做成「單一 HTML 檔」的互動網頁。網頁需求：
+   - 教師端：顯示偏誤點、學生可能搞混的原因、教學時要強調的重點
+   - 學生端：用學習者看得懂的話說明錯在哪裡；3 題類似情境的練習題；2 題近義詞比較練習；答完馬上顯示對錯和解釋
+   - 全部繁體中文、手機可以用、不用安裝任何東西
+3. 給我這個網頁的初步 HTML 程式碼（可以先不完整）。`,
+
+    builder: `請把下面的需求做成「一個單一 HTML 檔」的互動網頁（CSS 和 JavaScript 都寫在同一個檔案裡），做好後讓我可以直接預覽。
+
+【需求與初步程式碼】
+（把 Gemini 給你的 prompt 和程式碼貼在這裡）
+
+補充要求：
+- 全部使用繁體中文
+- 教師端和學生端用兩個分頁切換
+- 練習題可以點選作答，並馬上顯示對錯和解釋
+- 清楚標出偏誤句原文、用錯的詞和正確的詞`,
+  },
+};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+(function(){
+'use strict';
+// ====== 設定：全部來自 content/config.js ======
+const C=window.CWN_CONFIG||{};
+const STUDENT_URL=C.studentUrl||'';
+const WARMUP=C.warmup||{};
+const escH=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const CWN_URL=C.cwnUrl||'https://lopentu.github.io/CwnWeb/';
+// 「1–3 組」這類標籤由 groups 自動產生
+const groupLabel=gs=>{ const a=[...gs].sort((x,y)=>x-y); const consecutive=a.every((g,i)=>i===0||g===a[i-1]+1); return (consecutive&&a.length>1?a[0]+'–'+a[a.length-1]:a.join('、'))+' 組' };
+const SENTS=(C.sentences||[]).map(s=>({id:s.id,g:groupLabel(s.groups),t:s.toks.split('|').join(''),ref:String(s.ref||'').replace(/^可留意：/,'').replace(/。$/,'')}));
+
+const SLIDES=[
+ {id:'start', nav:'開場', html:()=>`
+  <div class="kicker">華語文教學系 · 詞彙AI實作課</div>
+  <h1>AI與詞義偏誤</h1>
+  <p class="lead">從學習者真實語料出發：用專業工具分析，並請AI 幫忙做教材，專家與AI協作合適的教材。</p>
+  ${WARMUP.url?`<div class="join card warm">
+    <div class="qr" data-qr="${escH(WARMUP.url)}">QR code 載入中</div>
+    <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+      <div class="kicker">暖身提問 · 掃描 QR code 到 ${escH(WARMUP.where||'這裡')} 回答</div>
+      <p class="big-q">${escH(WARMUP.question)}</p>
+      <a class="url" href="${escH(WARMUP.url)}" target="_blank" rel="noopener">${escH(WARMUP.url)}</a>
+    </div>
+  </div>`:''}
+  <div class="grid g2">
+    <div class="card"><div class="kicker">目標一</div><h3>偏誤句分析</h3><p style="margin-top:6px">找出詞彙誤代、解釋錯在哪裡，並從語意關係出發設計教學。</p></div>
+    <div class="card"><div class="kicker">目標二</div><h3>用 AI 做互動教材</h3><p style="margin-top:6px">沒有程式背景也能引導 AI 做出教師端＋學生端的練習網頁，並判斷內容合不合適。</p></div>
+  </div>
+  <div>
+    <h3 style="margin-bottom:8px">今天的 50 分鐘</h3>
+    <div class="tl">
+      <div style="flex:3"><b>3′</b>認識 CWN</div>
+      <div style="flex:5"><b>5′</b>1 找出誤代詞</div>
+      <div style="flex:12"><b>12′</b>2 分隊分析（人類／AI）</div>
+      <div style="flex:15"><b>15′</b>3 比較與討論</div>
+      <div style="flex:15" class="disc"><b>15′</b>全班分享討論</div>
+    </div>
+  </div>`,
+  notes:'前 35 分鐘按頁面推進；每個階段頁都有計時器。學生任務單的教師端可同步「通知全班目前階段」。'},
+
+ {id:'error', nav:'什麼是誤代', html:()=>`
+  <div class="kicker">先備概念</div>
+  <h2>偏誤分析裡的「誤代」</h2>
+  <p>常見的偏誤分類有四種。今天的句子全部屬於<strong>誤代</strong>：在這個語境裡，應該用甲詞，學習者卻用了乙詞。</p>
+  <div class="quad">
+    <div><strong>遺漏</strong><span class="small muted">該有的成分沒有出現</span></div>
+    <div><strong>誤加</strong><span class="small muted">多了不該有的成分</span></div>
+    <div class="hl"><strong>誤代</strong><span class="small">用錯了詞：該用甲，卻用了乙</span></div>
+    <div><strong>錯序</strong><span class="small muted">成分的位置放錯了</span></div>
+  </div>
+  <div class="card">
+    <div class="kicker">舉例</div>
+    <p class="ex" style="margin-top:6px">週末我們去<span class="err">參觀</span>了王老師。 → 去<span class="fix">拜訪</span>了王老師。</p>
+    <p class="muted" style="margin-top:8px">「參觀」和「拜訪」在學習者的母語裡可能是同一個詞（例如英語都可以說 visit），但中文裡「參觀」的對象是地方、展覽，「拜訪」的對象是人。</p>
+  </div>
+  <div class="card soft">
+    <h3>誤代常發生在哪些詞之間？</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"><span class="chip acc">意思相近（近義詞）</span><span class="chip acc">母語翻譯相同</span><span class="chip acc">字形相近</span><span class="chip acc">讀音相近</span><span class="chip acc">搭配不同</span></div>
+    <p style="margin-top:10px">要說清楚「為什麼不能這樣用」，就需要知道每個詞有哪些<strong>義項</strong>、常跟什麼詞<strong>搭配</strong>、和其他詞有什麼<strong>語意關係</strong>。這正是中文詞彙網路整理的內容。</p>
+  </div>`,
+  notes:'可以請同學先回想詞彙課、語法課看過的偏誤句，屬於哪一類。'},
+
+ {id:'cwn', nav:'CWN 是什麼', html:()=>`
+  <div class="kicker">認識工具</div>
+  <h2>中文詞彙網路（Chinese Wordnet, CWN）</h2>
+  <p>CWN 以「<strong>義項</strong>（sense）」為單位整理中文詞彙：一個詞拆成一個個義項，各有詞性、釋義與例句；義項之間再用<strong>語意關係</strong>連成網路。</p>
+  <div class="net" role="img" aria-label="CWN 的結構：一個詞有多個義項，每個義項連到不同語意關係">
+    <div class="lemma"><span class="small">詞條 lemma</span><strong>某詞</strong><span class="small">一個詞形</span></div>
+    <div class="senses">
+      <div class="sense"><div class="def"><b>義項 1</b>詞性 · 釋義 · 例句</div><div class="rels"><span class="chip cwn">同義詞</span><span class="chip cwn">近義詞</span><span class="chip acc">上位詞</span></div></div>
+      <div class="sense"><div class="def"><b>義項 2</b>詞性 · 釋義 · 例句</div><div class="rels"><span class="chip acc">下位詞</span><span class="chip ai">反義詞</span></div></div>
+      <div class="sense"><div class="def"><b>義項 3 …</b>同一個詞的其他意思</div><div class="rels"><span class="chip">整體—部分</span><span class="chip">其他關係</span></div></div>
+    </div>
+  </div>
+  <div class="grid g3">
+    <div class="card"><h3>義項 sense</h3><p class="small" style="margin-top:4px">同一個詞的不同意思分開列出。學習者常常只學到其中一個義項，就拿去用在別的語境。</p></div>
+    <div class="card"><h3>同義詞集 synset</h3><p class="small" style="margin-top:4px">意思相同的義項歸成一組。可以看出哪些詞「真的可以互換」，哪些只是部分重疊。</p></div>
+    <div class="card"><h3>語意關係 relations</h3><p class="small" style="margin-top:4px">同義、近義、反義、上位—下位、整體—部分等。是設計「近義詞辨析」教學的切入點。</p></div>
+  </div>`,
+  notes:'結構圖是示意，不是某個詞的真實資料。可現場在 CWN 查一個詞示範。'},
+
+ {id:'history', nav:'CWN 的建立', html:()=>`
+  <div class="kicker">認識工具</div>
+  <h2>CWN 的建立與團隊</h2>
+  <div class="grid g2">
+    <div class="hist">
+      <div><b>2003</b>於中央研究院語言學研究所開始建置，以義項區分與語意關係標記為核心。</div>
+      <div><b>2006</b>推出線上查詢系統，開放各界檢索使用。</div>
+      <div><b>2009</b>由謝舒凱教授接續主持計畫，2010 年完成並釋出 CWN 1.0；之後移至臺大語言所維護。</div>
+      <div><b>2022</b>臺大語言所 LOPE 實驗室釋出 CWN 2.0，持續維護與擴充。</div>
+    </div>
+    <div class="stack" style="display:flex;flex-direction:column;gap:12px">
+      <div class="stats">
+        <div><b>29,321</b><span class="small muted">詞條</span></div>
+        <div><b>29,433</b><span class="small muted">義項</span></div>
+        <div><b>12,620</b><span class="small muted">同義詞集</span></div>
+        <div><b>59,993</b><span class="small muted">義項關係</span></div>
+      </div>
+      <p class="small muted">數字取自 CWN 2.0 官方網站（v2022）。</p>
+    </div>
+  </div>
+  <div class="grid g3">
+    <div class="card person"><span class="chip acc" style="align-self:flex-start">創建主持</span><span class="nm">黃居仁</span><span class="small muted">Chu-Ren Huang</span><p class="small">於中研院語言所發起並主持 CWN 的建置，奠定以義項為核心的詞彙語意架構。</p></div>
+    <div class="card person"><span class="chip acc" style="align-self:flex-start">核心建置成員</span><span class="nm">洪嘉馡</span><span class="small muted">Jia-Fei Hong</span><p class="small">參與 CWN 的設計與義項分析，並將詞彙語意研究帶入華語教學。</p></div>
+    <div class="card person"><span class="chip acc" style="align-self:flex-start">主持與維護</span><span class="nm">謝舒凱</span><span class="small muted">Shu-Kai Hsieh</span><p class="small">2009 年起接續主持計畫，之後於臺大語言所 LOPE 實驗室持續維護、擴充 CWN，並推出 2.0 版。</p></div>
+  </div>
+  <p class="small muted">文獻：黃居仁、謝舒凱、洪嘉馡等（2010）。〈中文詞彙網路：跨語言知識處理基礎架構的設計理念與實踐〉。《中國語文》，24(2)。</p>`,
+  notes:'人物介紹的措辭請依你想強調的重點修改（例如洪嘉馡老師目前的任教單位）。'},
+
+ {id:'howto', nav:'怎麼查 CWN', html:()=>`
+  <div class="kicker">認識工具</div>
+  <h2>怎麼用 CWN 分析一個誤代？</h2>
+  <div class="grid g2">
+    <ol class="todo">
+      <li><div><strong>打開 CWN 線上查詢</strong><br><span class="small muted"><a href="${CWN_URL}" target="_blank" rel="noopener">lopentu.github.io/CwnWeb</a>，選「線上查詢」。</span></div></li>
+      <li><div><strong>查學習者用錯的詞</strong><br><span class="small muted">看它有幾個義項，找出學習者「以為」的那一個意思。</span></div></li>
+      <li><div><strong>查應該用的詞</strong><br><span class="small muted">比較兩個詞的義項：哪裡重疊、哪裡不同？例句的搭配有什麼差別？</span></div></li>
+      <li><div><strong>找出語意關係</strong><br><span class="small muted">是近義詞？上下位？還是只在母語裡翻譯相同？這會決定你怎麼教。</span></div></li>
+    </ol>
+    <div class="card soft">
+      <h3>比較表範例</h3>
+      <div style="overflow-x:auto;margin-top:8px"><table style="width:100%;border-collapse:collapse;font-size:.9rem">
+        <tr><th style="text-align:left;padding:6px;border-bottom:1px solid var(--line)"></th><th style="text-align:left;padding:6px;border-bottom:1px solid var(--line)">參觀</th><th style="text-align:left;padding:6px;border-bottom:1px solid var(--line)">拜訪</th></tr>
+        <tr><td style="padding:6px;border-bottom:1px solid var(--line);color:var(--muted)">對象</td><td style="padding:6px;border-bottom:1px solid var(--line)">地方、展覽</td><td style="padding:6px;border-bottom:1px solid var(--line)">人</td></tr>
+        <tr><td style="padding:6px;border-bottom:1px solid var(--line);color:var(--muted)">常見搭配</td><td style="padding:6px;border-bottom:1px solid var(--line)">參觀博物館</td><td style="padding:6px;border-bottom:1px solid var(--line)">拜訪老師</td></tr>
+        <tr><td style="padding:6px;color:var(--muted)">語意關係</td><td style="padding:6px" colspan="2">都屬「去某處看人或物」，但對象不同，不能互換</td></tr>
+      </table></div>
+      <p class="small muted" style="margin-top:8px">各組的「查詞網紀錄」可以照這個格式寫。</p>
+    </div>
+  </div>`,
+  notes:'若時間允許，現場查一次「參觀」「拜訪」示範義項畫面。比較表為示意，並非 CWN 原文。'},
+
+ {id:'groups', nav:'分組與任務', html:()=>`
+  <div class="kicker">今天的任務</div>
+  <h2>每組一個偏誤句</h2>
+  <div class="join card">
+    <div class="qr" data-qr="${escH(STUDENT_URL)}">QR code 載入中</div>
+    <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+      <h3>掃描開啟「偏誤句小組任務單」</h3>
+      <p>選你的組別就能開始。全組共用一份答案，任何人按儲存都會同步給組員。</p>
+      <span class="url">${STUDENT_URL}</span>
+      <p class="small muted">每組 6 人，階段 2 分成兩隊同時進行：<strong style="color:var(--cwn)">人類分析小隊</strong>查 CWN、<strong style="color:var(--ai)">AI 分析小隊</strong>問 AI，各約 3 人。</p>
+    </div>
+  </div>
+  <div class="card alloc">
+    ${SENTS.map(s=>`<div class="row"><span class="gp">${s.g}<br><span class="small muted">偏誤句 ${s.id}</span></span><span class="tx">${s.t}</span></div>`).join('')}
+  </div>
+  <p class="small muted">語料來源：國家教育研究院華語中介語語料庫（2019）；偏誤類型皆為詞彙誤代。</p>`,
+  notes:()=>`<strong>各句可留意的詞（草稿，非標準答案）</strong><ul class="clean small" style="margin-top:6px">${SENTS.map(s=>`<li>句 ${s.id}：${s.ref}</li>`).join('')}</ul><p class="small" style="margin-top:6px">學生任務單需從分享選單開啟連結分享，學生才打得開。</p>`},
+
+ {id:'s1', nav:'1 找誤代詞', min:5, html:()=>`
+  <div class="stagehead"><div><div class="kicker">階段 1 · 小組</div><h2>找出誤代詞</h2></div>${timerHTML()}</div>
+  <div class="grid g2">
+    <ol class="todo">
+      <li><div><strong>先不查資料、不問 AI</strong><br><span class="small muted">憑語感和組員討論。</span></div></li>
+      <li><div><strong>在任務單上點選「用錯了」的詞</strong><br><span class="small muted">可以點多個，再點一次取消。</span></div></li>
+      <li><div><strong>寫下改法與直覺理由</strong><br><span class="small muted">格式：誤代詞 → 正確詞。理由先寫直覺就好。</span></div></li>
+    </ol>
+    <div class="card soft"><h3>想一想</h3><p style="margin-top:6px">你能說出「為什麼不對」嗎？還是只知道「聽起來怪怪的」？</p><p class="small muted" style="margin-top:8px">這份直覺答案，等一下會拿來和詞網分析、AI 的解釋做比較。</p></div>
+  </div>`,
+  notes:'巡視時可問：你覺得學習者「以為」這個詞是什麼意思？'},
+
+ {id:'s2', nav:'2 分隊分析', min:12, html:()=>`
+  <div class="stagehead"><div><div class="kicker">階段 2 · 分兩隊同時進行</div><h2>人類分析小隊 × AI 分析小隊</h2></div>${timerHTML()}</div>
+  <div class="grid g2">
+    <div class="card cwn">
+      <span class="chip cwn">人類分析小隊 · 查 CWN</span>
+      <ol class="todo" style="margin-top:12px">
+        <li><div><strong>查詞網</strong><br><span class="small muted">查誤代詞與正確詞的義項、例句。</span></div></li>
+        <li><div><strong>解釋錯誤處</strong><br><span class="small muted">從詞義、搭配、語意關係說明為什麼不能用。</span></div></li>
+        <li><div><strong>教學計畫</strong><br><span class="small muted">以一種語意關係為切入點，3 個步驟＋1 題練習。</span></div></li>
+      </ol>
+    </div>
+    <div class="card ai">
+      <span class="chip ai">AI 分析小隊 · 問 AI、做網頁</span>
+      <div class="flow" style="margin-top:12px">
+        <div><b>Gemini</b>貼上任務單的模板，拿到 AI 的解釋、prompt、初步程式碼</div>
+        <div class="arr">→</div>
+        <div><b>Claude／ChatGPT</b>免費版，貼上 prompt＋程式碼，做出可操作的頁面</div>
+        <div class="arr">→</div>
+        <div><b>檢查</b>AI 說對了嗎？練習題合理嗎？</div>
+      </div>
+      <p class="small" style="margin-top:12px">網頁要有：<strong>教師端</strong>（偏誤點、教學重點）與<strong>學生端</strong>（錯誤說明、類似練習題、近義詞練習）。</p>
+    </div>
+  </div>
+  <div class="card soft">
+    <h3>好的 prompt 要有什麼？</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">
+      <span class="chip ai">角色：資深華語教師</span><span class="chip ai">對象：學習者程度、母語</span><span class="chip ai">材料：偏誤句原文</span><span class="chip ai">任務拆解：找詞 → 解釋 → 出題</span><span class="chip ai">輸出格式：教師端／學生端</span><span class="chip ai">限制：繁中、單一 HTML、手機可用</span><span class="chip ai">要求說明判斷依據</span>
+    </div>
+    <p class="small" style="margin-top:10px">AI 找錯詞或解釋牽強時，<strong>不要直接接受</strong>：告訴它你們的判斷，請它重新分析，並把過程記在任務單上。</p>
+  </div>`,
+  notes:'AI 組常見卡關：Gemini 給的程式碼太長、Claude 免費額度用完。可提醒他們先求「做出教師端＋一題練習」即可。'},
+
+ {id:'s3', nav:'3 比較與結論', min:15, html:()=>`
+  <div class="stagehead"><div><div class="kicker">階段 3 · 全組一起</div><h2>比較與結論</h2></div>${timerHTML()}</div>
+  <p>兩隊互相說明：人類分析小隊說查到什麼，AI 分析小隊說 AI 怎麼回答、展示做好的網頁。然後一起完成三題：</p>
+  <ol class="todo">
+    <li><div><strong>比一比：AI 哪裡說對？哪裡說錯或漏掉了？</strong><br><span class="small muted">再給 AI 的分析打分數：1 分（不能用）到 5 分（可以直接拿去教）。</span></div></li>
+    <li><div><strong>我們的最終答案</strong><br><span class="small muted">哪個詞錯？要改成什麼？兩個詞差在哪裡？</span></div></li>
+    <li><div><strong>一句話分享</strong><br><span class="small muted">要讓 AI 幫上忙，我們自己需要懂什麼？</span></div></li>
+  </ol>`,
+  notes:'巡視時可留意：AI 是否把錯字當成誤代、是否只給改法沒給理由、例句裡是否出現同樣的誤用。任務單教師端的「投影討論」可依偏誤句切換，看各組標記熱度、各隊答案與一句話分享。'},
+
+ {id:'discuss', nav:'全班討論', min:15, html:()=>`
+  <div class="stagehead"><div><div class="kicker">全班 · 15 分鐘</div><h2>分享與討論</h2></div>${timerHTML()}</div>
+  <p>每組用 1 分鐘分享「一句話」，接著一起想兩個問題：</p>
+  <div class="grid g2">
+    <div class="card"><p class="big-q">人類分析小隊和 AI 的答案一樣嗎？不一樣的時候，該相信誰？為什麼？</p></div>
+    <div class="card"><p class="big-q">AI 做的練習網頁，你敢直接給學習者用嗎？要先改哪裡？</p></div>
+  </div>
+  <div class="closing">
+    <div class="kicker" style="color:var(--accent-fg);opacity:.8">今天帶走的一句話</div>
+    <p class="big-q" style="margin-top:6px">AI 可以幫我們做教材，但要靠專業知識<strong>問對問題</strong>、<strong>看出錯誤</strong>，再把答案<strong>改成能教的內容</strong>。</p>
+  </div>`,
+  notes:'收束建議：回到目標二，強調「判斷 AI 產出是否合適」本身就是華語教師的專業能力。'},
+];
+
+// ====== 狀態與導覽 ======
+function lsGet(k){ try{ return JSON.parse(localStorage.getItem(k)) }catch(e){ return null } }
+function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)) }catch(e){} }
+let idx=0;
+const h=(location.hash||'').slice(1);
+const hi=SLIDES.findIndex(s=>s.id===h);
+if(hi>=0) idx=hi; else { const saved=lsGet('cwnteach:idx'); if(typeof saved==='number'&&saved<SLIDES.length) idx=saved }
+let showNotes=!!lsGet('cwnteach:notes');
+const timers={}; // id -> {left, running, endAt}
+let tick=null;
+
+const rail=document.getElementById('rail'), main=document.getElementById('main');
+rail.innerHTML=SLIDES.map((s,i)=>`<button data-i="${i}">${s.nav}</button>`).join('');
+rail.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>go(+b.dataset.i)));
+document.getElementById('prev').addEventListener('click',()=>go(idx-1));
+document.getElementById('next').addEventListener('click',()=>go(idx+1));
+const nt=document.getElementById('notesToggle'); nt.checked=showNotes;
+nt.addEventListener('change',()=>{ showNotes=nt.checked; lsSet('cwnteach:notes',showNotes); render() });
+document.addEventListener('keydown',e=>{
+  if(/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+  if(e.key==='ArrowRight'||e.key==='PageDown') go(idx+1);
+  if(e.key==='ArrowLeft'||e.key==='PageUp') go(idx-1);
+});
+
+function go(i){ if(i<0||i>=SLIDES.length) return; idx=i; lsSet('cwnteach:idx',idx); try{ history.replaceState(null,'','#'+SLIDES[idx].id) }catch(e){} render(); window.scrollTo({top:0}) }
+
+function timerHTML(){ return `<div class="timer" id="timer"><span class="t" id="tval"></span><button class="btn" id="tgo">開始</button><button class="btn ghost" id="treset">重設</button></div>` }
+function tState(s){ if(!timers[s.id]) timers[s.id]={left:s.min*60,running:false,endAt:0}; return timers[s.id] }
+function drawTimer(){
+  const s=SLIDES[idx]; if(!s.min) return; const st=tState(s);
+  const left=st.running?(st.endAt-Date.now())/1000:st.left;
+  const el=document.getElementById('tval'); if(!el) return;
+  const a=Math.abs(Math.round(left));
+  el.textContent=(left<0?'+':'')+Math.floor(a/60)+':'+String(a%60).padStart(2,'0');
+  document.getElementById('timer').classList.toggle('over',left<0);
+  document.getElementById('tgo').textContent=st.running?'暫停':(st.left<s.min*60?'繼續':'開始');
+}
+function wireTimer(){
+  const s=SLIDES[idx]; if(!s.min) return; const st=tState(s);
+  document.getElementById('tgo').addEventListener('click',()=>{
+    if(st.running){ st.left=(st.endAt-Date.now())/1000; st.running=false } else { st.endAt=Date.now()+st.left*1000; st.running=true }
+    drawTimer();
+  });
+  document.getElementById('treset').addEventListener('click',()=>{ st.running=false; st.left=s.min*60; drawTimer() });
+  drawTimer();
+}
+
+function render(){
+  const s=SLIDES[idx];
+  rail.querySelectorAll('button').forEach((b,i)=>{ b.classList.toggle('on',i===idx); if(i===idx) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current') });
+  const on=rail.querySelector('button.on'); if(on&&on.scrollIntoView) on.scrollIntoView({block:'nearest',inline:'center'});
+  const notes=typeof s.notes==='function'?s.notes():s.notes;
+  main.innerHTML=`<section class="slide">${s.html()}${showNotes&&notes?`<aside class="notes"><h3>教師備註</h3><div>${notes}</div></aside>`:''}</section>`;
+  document.getElementById('pos').textContent=(idx+1)+' / '+SLIDES.length;
+  document.getElementById('prev').disabled=idx===0;
+  document.getElementById('next').disabled=idx===SLIDES.length-1;
+  wireTimer();
+  drawQR();
+}
+// 頁面上每個 data-qr 方塊都畫成對應網址的 QR code
+function drawQR(){
+  document.querySelectorAll('#main [data-qr]').forEach(box=>{
+    const text=box.dataset.qr; if(!text) return;
+    if(typeof QRCode==='undefined'){ box.textContent='無法產生 QR code，請改用旁邊的連結'; return }
+    box.innerHTML=''; try{ new QRCode(box,{text,width:160,height:160,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M}) }catch(e){ box.textContent='無法產生 QR code，請改用旁邊的連結' }
+  });
+}
+setInterval(()=>{ const s=SLIDES[idx]; if(s.min&&timers[s.id]&&timers[s.id].running) drawTimer() },500);
+render();
+})();
+</script>
+
+</body>
+</html>

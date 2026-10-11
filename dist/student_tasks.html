@@ -665,14 +665,14 @@ function renderPage(){
       <p>這是一位華語學習者寫的句子，裡面有<strong>用錯的詞</strong>（誤代：該用甲詞，卻用了乙詞）。今天全組要一起找出錯誤、說明原因，也看看 AI 說得對不對。</p>
       <div class="flow">
         <div><span class="t">${stageMin(1)} 分鐘 · 全組</span><b>1 找誤代詞</b>憑語感找出用錯的詞</div>
-        <div><span class="t">${stageMin(2)} 分鐘 · 分兩隊</span><b>2 分隊分析</b>人類分析小隊查 CWN；AI 分析小隊問 AI</div>
+        <div><span class="t">${stageMin(2)} 分鐘 · 分兩隊</span><b>2 分隊分析</b>人類分析小隊自己分析詞義；AI 分析小隊問 AI</div>
         <div><span class="t">${stageMin(3)} 分鐘 · 全組</span><b>3 比較與結論</b>比一比誰說得對，寫下結論</div>
       </div>
       <div class="card stack">
         <h3>階段 2 要分成兩隊（每隊約 3 人）</h3>
         <p class="small muted">先討論好誰在哪一隊。到了階段 2，點你那一隊的頁面。</p>
         <div class="teams">
-          <button class="team human" data-jump="human"><strong>人類分析小隊</strong><span class="small">用中文詞彙網路（CWN）查詞義，自己分析、自己解釋。</span></button>
+          <button class="team human" data-jump="human"><strong>人類分析小隊</strong><span class="small">不問 AI，自己分析詞的意思和用法，再用自己的話解釋。</span></button>
           <button class="team ai" data-jump="ai"><strong>AI 分析小隊</strong><span class="small">請 AI 分析句子，並請 AI 做一個練習網頁。</span></button>
         </div>
       </div>
@@ -699,19 +699,20 @@ function renderPage(){
   }
   else if(p.id==='human'){
     h=`<div class="page">
-      ${head('階段 2 · 人類分析小隊','用 CWN 查詞、自己分析',stageMin(2),'human')}
+      ${head('階段 2 · 人類分析小隊','自己分析詞義',stageMin(2),'human')}
       ${sentCard()}
       <ol class="todo human">
-        <li><div><strong>打開 CWN，查「用錯的詞」。</strong><br><span class="small muted">看它有哪幾個意思（義項）。學習者以為的是哪一個？</span> <a class="btn sm human" style="margin-left:4px" href="${CWN_URL}" target="_blank" rel="noopener">打開 CWN ↗</a></div></li>
-        <li><div><strong>再查「正確的詞」，比一比。</strong><br><span class="small muted">兩個詞哪裡一樣、哪裡不一樣？常跟什麼詞一起用？</span></div></li>
+        <li><div><strong>想一想「用錯的詞」是什麼意思。</strong><br><span class="small muted">它有哪幾種意思、常怎麼用？學習者以為它是什麼意思？可以靠語感、自己造幾個例句來判斷。</span></div></li>
+        <li><div><strong>再想「正確的詞」，比一比。</strong><br><span class="small muted">兩個詞哪裡一樣、哪裡不一樣？常跟什麼詞一起用？</span></div></li>
         <li><div><strong>用學習者聽得懂的話解釋。</strong></div></li>
         <li><div><strong>想一個教法。</strong><br><span class="small muted">從兩個詞的關係開始教，例如它們是近義詞、或一個範圍大一個範圍小。</span></div></li>
       </ol>
+      <p class="small muted">想查資料的話，可以參考中文詞彙網路（CWN），裡面列出每個詞的不同意思和例句；不查也可以。 <a href="${CWN_URL}" target="_blank" rel="noopener">打開 CWN ↗</a></p>
       <div class="card human stack">
-        <h3>查詞紀錄</h3>
+        <h3>詞義分析紀錄</h3>
         <div class="cmp">
-          <div class="wrong"><span class="lbl">用錯的詞</span><input type="text" data-k="human.wrongWord" placeholder="例：參觀" value="${esc(getPath(S.data,'human.wrongWord')||'')}"><textarea data-k="human.wrongSense" rows="3" placeholder="CWN 上它的意思（義項）、例句">${esc(getPath(S.data,'human.wrongSense')||'')}</textarea></div>
-          <div class="right"><span class="lbl">正確的詞</span><input type="text" data-k="human.rightWord" placeholder="例：拜訪" value="${esc(getPath(S.data,'human.rightWord')||'')}"><textarea data-k="human.rightSense" rows="3" placeholder="CWN 上它的意思（義項）、例句">${esc(getPath(S.data,'human.rightSense')||'')}</textarea></div>
+          <div class="wrong"><span class="lbl">用錯的詞</span><input type="text" data-k="human.wrongWord" placeholder="例：參觀" value="${esc(getPath(S.data,'human.wrongWord')||'')}"><textarea data-k="human.wrongSense" rows="3" placeholder="它的意思、常見用法或例句">${esc(getPath(S.data,'human.wrongSense')||'')}</textarea></div>
+          <div class="right"><span class="lbl">正確的詞</span><input type="text" data-k="human.rightWord" placeholder="例：拜訪" value="${esc(getPath(S.data,'human.rightWord')||'')}"><textarea data-k="human.rightSense" rows="3" placeholder="它的意思、常見用法或例句">${esc(getPath(S.data,'human.rightSense')||'')}</textarea></div>
         </div>
         ${ta('human.diff','兩個詞差在哪裡？','意思、搭配的詞、用在什麼對象…','例：參觀＋地方（博物館），拜訪＋人（老師）。',2)}
         ${ta('human.explain','跟學習者怎麼說？','一兩句話，學習者要聽得懂。','例：「參觀」是去看一個地方；要去看一個人，要說「拜訪」。',2)}
@@ -767,7 +768,7 @@ function renderPage(){
     const sc=String(G('s3.score')||'');
     h=`<div class="page">
       ${head('階段 3 · 全組一起','比較與結論',stageMin(3))}
-      <p>兩隊先互相說明：人類分析小隊說查到什麼，AI 分析小隊說 AI 怎麼回答、展示做好的網頁。然後一起完成下面三題。</p>
+      <p>兩隊先互相說明：人類分析小隊說分析出什麼，AI 分析小隊說 AI 怎麼回答、展示做好的網頁。然後一起完成下面三題。</p>
       <div class="grid g2">
         <div class="card human stack"><span class="chip human" style="align-self:flex-start">人類分析小隊</span><p><strong>${esc(G('human.wrongWord'))||'？'} → ${esc(G('human.rightWord'))||'？'}</strong></p><p class="small">${esc(G('human.explain'))||'<span class="muted">（還沒儲存）</span>'}</p></div>
         <div class="card ai stack"><span class="chip ai" style="align-self:flex-start">AI 分析小隊</span><p><strong>${esc(G('ai.aiFix'))||'？'}</strong></p><p class="small" style="max-height:8.5em;overflow:auto">${esc(G('ai.aiExplain'))||'<span class="muted">（還沒儲存）</span>'}</p></div>

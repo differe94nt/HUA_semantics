@@ -9,6 +9,9 @@
 | 偏誤句小組任務單 | 學生（教師端也在這裡，點「教師入口」輸入通關碼） | https://differe94nt.github.io/HUA_semantics/dist/student_tasks.html |
 | 詞網與AI偏誤工作坊 | 教師投影 | https://differe94nt.github.io/HUA_semantics/dist/teaching_slides.html |
 
+舊版（v1，人類分析小隊必須查 CWN）保留在 `dist/v1/`，不會再被 `build.py` 改動：
+[學生任務單 v1](https://differe94nt.github.io/HUA_semantics/dist/v1/student_tasks.html) · [教學頁 v1](https://differe94nt.github.io/HUA_semantics/dist/v1/teaching_slides.html)。v1 和新版存到同一份 Google 試算表。
+
 ## 舊的線上版本（claude.ai Artifact，需從分享選單開啟連結）
 
 | 網頁 | 用途 | 連結 |
@@ -26,7 +29,8 @@ src/                     網頁原始碼（直接用瀏覽器開也能看，會�
   student_tasks.html       學生任務單＋教師端
   teaching_slides.html     教學投影頁
 build.py                 把 config.js 嵌進網頁，產生下面兩個資料夾
-dist/                    獨立版網頁（雙擊即可開；可放 GitHub Pages）
+dist/                    獨立版網頁（雙擊即可開；GitHub Pages 用這裡）
+  v1/                      舊版快照（人類分析小隊必須查 CWN），build 不會改動
 artifact_source/         claude.ai Artifact 用的原始碼（不含 <html> 外框）
 backend/google_sheets.gs 選用：Google 試算表後端（Apps Script），設定步驟見 backend/README.md
 tools/export.py          把學生答案整理成 CSV，存進 data/exports/

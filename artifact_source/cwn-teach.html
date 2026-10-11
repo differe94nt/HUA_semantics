@@ -353,7 +353,7 @@ const SLIDES=[
   notes:'人物介紹的措辭請依你想強調的重點修改（例如洪嘉馡老師目前的任教單位）。'},
 
  {id:'howto', nav:'怎麼查 CWN', html:()=>`
-  <div class="kicker">認識工具</div>
+  <div class="kicker">參考資源 · 分析時可以這樣想</div>
   <h2>怎麼用 CWN 分析一個誤代？</h2>
   <div class="grid g2">
     <ol class="todo">
@@ -370,7 +370,7 @@ const SLIDES=[
         <tr><td style="padding:6px;border-bottom:1px solid var(--line);color:var(--muted)">常見搭配</td><td style="padding:6px;border-bottom:1px solid var(--line)">參觀博物館</td><td style="padding:6px;border-bottom:1px solid var(--line)">拜訪老師</td></tr>
         <tr><td style="padding:6px;color:var(--muted)">語意關係</td><td style="padding:6px" colspan="2">都屬「去某處看人或物」，但對象不同，不能互換</td></tr>
       </table></div>
-      <p class="small muted" style="margin-top:8px">各組的「查詞網紀錄」可以照這個格式寫。</p>
+      <p class="small muted" style="margin-top:8px">人類分析小隊的「詞義分析紀錄」可以參考這個格式；查不查 CWN 由各組決定。</p>
     </div>
   </div>`,
   notes:'若時間允許，現場查一次「參觀」「拜訪」示範義項畫面。比較表為示意，並非 CWN 原文。'},
@@ -384,7 +384,7 @@ const SLIDES=[
       <h3>掃描開啟「偏誤句小組任務單」</h3>
       <p>選你的組別就能開始。全組共用一份答案，任何人按儲存都會同步給組員。</p>
       <span class="url">${STUDENT_URL}</span>
-      <p class="small muted">每組 6 人，階段 2 分成兩隊同時進行：<strong style="color:var(--cwn)">人類分析小隊</strong>查 CWN、<strong style="color:var(--ai)">AI 分析小隊</strong>問 AI，各約 3 人。</p>
+      <p class="small muted">每組 6 人，階段 2 分成兩隊同時進行：<strong style="color:var(--cwn)">人類分析小隊</strong>自己分析詞義、<strong style="color:var(--ai)">AI 分析小隊</strong>問 AI，各約 3 人。</p>
     </div>
   </div>
   <div class="card alloc">
@@ -401,7 +401,7 @@ const SLIDES=[
       <li><div><strong>在任務單上點選「用錯了」的詞</strong><br><span class="small muted">可以點多個，再點一次取消。</span></div></li>
       <li><div><strong>寫下改法與直覺理由</strong><br><span class="small muted">格式：誤代詞 → 正確詞。理由先寫直覺就好。</span></div></li>
     </ol>
-    <div class="card soft"><h3>想一想</h3><p style="margin-top:6px">你能說出「為什麼不對」嗎？還是只知道「聽起來怪怪的」？</p><p class="small muted" style="margin-top:8px">這份直覺答案，等一下會拿來和詞網分析、AI 的解釋做比較。</p></div>
+    <div class="card soft"><h3>想一想</h3><p style="margin-top:6px">你能說出「為什麼不對」嗎？還是只知道「聽起來怪怪的」？</p><p class="small muted" style="margin-top:8px">這份直覺答案，等一下會拿來和人類分析小隊的分析、AI 的解釋做比較。</p></div>
   </div>`,
   notes:'巡視時可問：你覺得學習者「以為」這個詞是什麼意思？'},
 
@@ -409,9 +409,9 @@ const SLIDES=[
   <div class="stagehead"><div><div class="kicker">階段 2 · 分兩隊同時進行</div><h2>人類分析小隊 × AI 分析小隊</h2></div>${timerHTML()}</div>
   <div class="grid g2">
     <div class="card cwn">
-      <span class="chip cwn">人類分析小隊 · 查 CWN</span>
+      <span class="chip cwn">人類分析小隊 · 自己分析詞義</span>
       <ol class="todo" style="margin-top:12px">
-        <li><div><strong>查詞網</strong><br><span class="small muted">查誤代詞與正確詞的義項、例句。</span></div></li>
+        <li><div><strong>分析詞義</strong><br><span class="small muted">比較誤代詞與正確詞的意思、搭配和例句；想查資料可參考 CWN（不強制）。</span></div></li>
         <li><div><strong>解釋錯誤處</strong><br><span class="small muted">從詞義、搭配、語意關係說明為什麼不能用。</span></div></li>
         <li><div><strong>教學計畫</strong><br><span class="small muted">以一種語意關係為切入點，3 個步驟＋1 題練習。</span></div></li>
       </ol>
@@ -439,7 +439,7 @@ const SLIDES=[
 
  {id:'s3', nav:'3 比較與結論', min:15, html:()=>`
   <div class="stagehead"><div><div class="kicker">階段 3 · 全組一起</div><h2>比較與結論</h2></div>${timerHTML()}</div>
-  <p>兩隊互相說明：人類分析小隊說查到什麼，AI 分析小隊說 AI 怎麼回答、展示做好的網頁。然後一起完成三題：</p>
+  <p>兩隊互相說明：人類分析小隊說分析出什麼，AI 分析小隊說 AI 怎麼回答、展示做好的網頁。然後一起完成三題：</p>
   <ol class="todo">
     <li><div><strong>比一比：AI 哪裡說對？哪裡說錯或漏掉了？</strong><br><span class="small muted">再給 AI 的分析打分數：1 分（不能用）到 5 分（可以直接拿去教）。</span></div></li>
     <li><div><strong>我們的最終答案</strong><br><span class="small muted">哪個詞錯？要改成什麼？兩個詞差在哪裡？</span></div></li>
