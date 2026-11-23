@@ -12,6 +12,15 @@ window.CWN_CONFIG = {
   cwnUrl: 'https://lopentu.github.io/CwnWeb/',
   // 教學頁 QR code 連到的學生任務單網址
   studentUrl: 'https://differe94nt.github.io/HUA_semantics/dist/student_tasks.html',
+  // 網頁最下方的設計者資訊（學生任務單、教師端、教學投影頁都會顯示）
+  author: {
+    name: '王伯雅',
+    email: 'differe94nt@gmail.com',
+    links: [
+      ['個人網站', 'https://diff94.github.io/'],
+      ['現職網站', 'https://ntu-chai.github.io/#team'],
+    ],
+  },
 
   // ---- 教學頁開場的暖身提問（放在「目標一、二」上面；QR code 由網址自動產生）----
   // 不需要這一區時，把 url 改成 '' 即可隱藏。

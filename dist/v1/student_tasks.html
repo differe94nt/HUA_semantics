@@ -179,6 +179,7 @@ details.help summary{cursor:pointer;font-weight:600;color:var(--accent)}
 .ans.long{max-height:16em;overflow:auto;font-size:.85rem}
 .toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:.9rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
 .toast.show{opacity:1}
+.credit{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);font-size:.8rem;color:var(--muted);text-align:center;overflow-wrap:anywhere;line-height:1.8}
 @media (prefers-reduced-motion:no-preference){ .page{animation:in .22s ease-out} @keyframes in{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}} }
 @media (prefers-reduced-motion:reduce){ .toast{transition:none} }
 </style>
@@ -194,6 +195,15 @@ details.help summary{cursor:pointer;font-weight:600;color:var(--accent)}
 //  （直接用瀏覽器開 src/ 裡的網頁，也會即時讀到這裡的設定。）
 // =====================================================================
 window.CWN_CONFIG = {
+  // 網頁最下方的設計者資訊
+  author: {
+    name: '王伯雅',
+    email: 'differe94nt@gmail.com',
+    links: [
+      ['個人網站', 'https://diff94.github.io/'],
+      ['現職網站', 'https://ntu-chai.github.io/#team'],
+    ],
+  },
 
   // ---- 基本 ----
   teacherCode: 'cwn2026',          // 教師端通關碼
@@ -342,6 +352,12 @@ const clone=o=>JSON.parse(JSON.stringify(o));
 //   watchGroups(cb)           全班答案有更新時呼叫 cb({g1:{...},...})
 //   watchSettings(cb)         教師廣播有更新時呼叫 cb(settings)
 const noop=()=>{};
+// 每一頁最下方的設計者資訊（content/config.js 的 author）
+function credit(){
+  const a=C.author; if(!a||!a.name) return '';
+  const links=(a.links||[]).filter(l=>l&&safeUrl(l[1])).map(([t,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a>`);
+  return `<footer class="credit">設計：${esc(a.name)}${a.email?` · <a href="mailto:${esc(a.email)}">${esc(a.email)}</a>`:''}${links.length?' · '+links.join(' · '):''}</footer>`;
+}
 function makeLocalStore(){
   return { mode:'local',
     async saveGroup(id,data){ lsSet(LS.data+id.slice(1),data) },
@@ -585,7 +601,7 @@ function renderLogin(){
       <p class="status" id="codeMsg"></p>
       ${S.t.unlocked?'<p class="small" style="margin-top:6px"><a href="#" id="goTeacher">已解鎖教師端，直接進入 →</a></p>':''}
     </details>
-  </div></main>`;
+  </div>${credit()}</main>`;
   app.querySelectorAll('[data-g]').forEach(b=>b.addEventListener('click',()=>{ S.group=+b.dataset.g; lsSet(LS.group,S.group); loadLocal(); S.page=0; lsSet(LS.page,0); subscribeGroup(); render() }));
   $('#teacherForm').addEventListener('submit',e=>{ e.preventDefault();
     if($('#inCode').value===TEACHER_CODE){ S.t.unlocked=true; lsSet(LS.teacher,true); S.view='teacher'; subscribeTeacher(); render() }
@@ -615,7 +631,7 @@ function renderStudent(){
     </div>
     <nav class="rail" id="rail" aria-label="任務頁"></nav>
   </div></div>
-  <main class="wrap"><div id="banner"></div><div id="pageBody"></div></main>
+  <main class="wrap"><div id="banner"></div><div id="pageBody"></div>${credit()}</main>
   <div class="foot"><div class="foot-in"><button class="btn ghost" id="prev">← 上一頁</button><span class="pos" id="pos"></span><button class="btn" id="next">下一頁 →</button></div></div>`;
   $('#btnLeave').addEventListener('click',()=>{ lsDel(LS.group); S.group=null; if(S.groupUnsub){S.groupUnsub();S.groupUnsub=null} S.dirty.clear(); render() });
   $('#btnCopyAll').addEventListener('click',()=>copyText(summaryText()));
@@ -820,7 +836,7 @@ function renderTeacher(){
     <nav class="rail" id="tRail"><button data-tab="overview">進度總覽</button><button data-tab="group">各組答案</button><button data-tab="proj">投影討論</button></nav>
     <div id="tStageBar"></div>
   </div></div>
-  <main class="wrap wide"><div id="tBody" class="page"></div></main>`;
+  <main class="wrap wide"><div id="tBody" class="page"></div>${credit()}</main>`;
   app.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{ S.t.tab=b.dataset.tab; renderTeacherBody() }));
   $('#btnBack').addEventListener('click',()=>{ S.view='login'; render() });
   $('#btnExport').addEventListener('click',exportCSV);
